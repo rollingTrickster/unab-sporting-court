@@ -1471,7 +1471,7 @@ function renderReservationSuccess(reservation) {
         </div>
         
         <div class="reservation-total">
-            <span class="label">Total Pagado</span>
+            <span class="label">Total a Pagar</span>
             <span class="amount">${formatPrice(reservation.price)}</span>
         </div>
     `;
@@ -1959,3 +1959,4 @@ window.testScenarioProblema = () => {
     
     console.log('🧪 === FIN DE LA PRUEBA ===');
 };
+
