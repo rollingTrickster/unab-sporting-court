@@ -1473,6 +1473,7 @@ function renderReservationSuccess(reservation) {
         <div class="reservation-total">
             <span class="label">Total a Pagar</span>
             <span class="amount">${formatPrice(reservation.price)}</span>
+            <p class="note">Recuerde pagar antes de utilizar la cancha</p>
         </div>
     `;
     
@@ -1959,4 +1960,5 @@ window.testScenarioProblema = () => {
     
     console.log('🧪 === FIN DE LA PRUEBA ===');
 };
+
 
