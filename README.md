@@ -10,7 +10,7 @@
 Este es un sistema completo de reservas de canchas deportivas convertido a HTML, CSS y JavaScript vanilla. Donde en la rama principal podemos ver la aplicacion final y en sus ramas las distintas versiones que fuimos guardando y las que utilizamos de punto de retorno.
 
 ## Despliegue con apache
-Para realizar el despliegue con apache utilizaremos XAMPP, donde luego de instalar este programa debe descargar el archivo comprimido de este Github, descomprimirlo y guardar esta carpeta, posterior a esto abriremos XAMPP donde en su interfaz principal presionaremos el boton de "Explorer" este abrira la ubicacion de los archivos para correr XAMPP, donde nos dirigiremos a la carpeta "htdocs", y copiaremos la carpeta descomprimida de los archivos de la aplicacion web, posterior a esto volveremos al XAMPP y en el apartado de Apache le daremos a "Star" y luego de esperar a que se inicie presionaremos el boton "Admin", este abrira en nuestro buscador la pagina principal de XAMPP. En esta pagina nos dirigiremos a la barra superior de nuestro buscador, editaremos el link y colocaremos "localhost/(nombre de la carpeta)" y le daremos a buscar. Luego de esto, nos deberia dirigir a nuestra pagina ya desplegada.
+Para realizar el despliegue con apache utilizaremos XAMPP, donde luego de instalar este programa debe descargar el archivo comprimido de este Github, descomprimirlo y guardar esta carpeta, posterior a esto abriremos XAMPP donde en su interfaz principal presionaremos el boton de "Explorer" este abrira la ubicacion de los archivos para correr XAMPP, donde nos dirigiremos a la carpeta "htdocs", y copiaremos la carpeta descomprimida de los archivos de la aplicacion web, posterior a esto volveremos al XAMPP y en el apartado de Apache le daremos a "Start" y luego de esperar a que se inicie presionaremos el boton "Admin", este abrira en nuestro buscador la pagina principal de XAMPP. En esta pagina nos dirigiremos a la barra superior de nuestro buscador, editaremos el link y colocaremos "localhost/(nombre de la carpeta)" y le daremos a buscar. Luego de esto, nos deberia dirigir a nuestra pagina ya desplegada.
 ## Funcionalidades
 
 ### Autenticación
@@ -220,6 +220,7 @@ Modifica las variables CSS en `styles.css`:
 ---
 
 **Nota**: Esta es una conversión completa de la aplicación React original a vanilla HTML/CSS/JavaScript, manteniendo toda la funcionalidad y experiencia de usuario.
+
 
 
 
