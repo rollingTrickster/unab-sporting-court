@@ -1,39 +1,46 @@
 # Sistema de Reservas de Canchas Deportivas
 
+## Integrantes
+Andrés Calderón 
+Joaquín Fuenzalida 
+Bastián Kramarenko
+Benjamín Vallejos
+
 ## Descripción
-Este es un sistema completo de reservas de canchas deportivas convertido a HTML, CSS y JavaScript vanilla. Mantiene todas las funcionalidades originales de la aplicación React/TypeScript.
+Este es un sistema completo de reservas de canchas deportivas convertido a HTML, CSS y JavaScript vanilla. Donde en la rama principal podemos ver la aplicacion final y en sus ramas las distintas versiones que fuimos guardando y las que utilizamos de punto de retorno.
 
 ## Funcionalidades
 
-### 🔐 Autenticación
+### Autenticación
 - **Login**: Acceso con RUT y contraseña
 - **Registro**: Creación de cuenta con datos personales
 - **Formateo automático de RUT**: Formato chileno (12.345.678-9)
 - **Validación de formularios**: Campos obligatorios y validación de email
 
-### 🏟️ Gestión de Deportes
+###  Gestión de Deportes
 - **Fútbol**: Canchas de fútbol 11 y fútbol 7
 - **Tenis**: Canchas individuales y dobles  
 - **Pádel**: Canchas techadas y al aire libre
 - **Información detallada**: Capacidad, características, precios y disponibilidad
 
-### 📅 Sistema de Reservas
+### Sistema de Reservas
 - **Calendario interactivo**: Navegación por meses y selección de fechas
 - **Horarios disponibles**: Slots de tiempo con precios
 - **Validación de fechas**: Solo fechas futuras y disponibles
 - **Confirmación de reserva**: Modal con resumen de detalles
 
-### 📋 Gestión de Reservas
+### Gestión de Reservas
 - **Mis Reservas**: Lista de reservas actuales
 - **Editar reservas**: Cambiar fecha y hora
 - **Cancelar reservas**: Con confirmación de seguridad
 - **Estados de reserva**: Confirmada/Pendiente
 
-### ✅ Confirmación y Seguimiento
+### Confirmación y Seguimiento
 - **Página de éxito**: Confirmación visual de la reserva
 - **Código de reserva**: Código único para presentar en la cancha
 - **Acciones**: Descargar, compartir, ver reservas o hacer nueva reserva
 - **Información importante**: Instrucciones para el día de la reserva
+
 
 ## Estructura de Archivos
 
@@ -211,3 +218,4 @@ Modifica las variables CSS en `styles.css`:
 ---
 
 **Nota**: Esta es una conversión completa de la aplicación React original a vanilla HTML/CSS/JavaScript, manteniendo toda la funcionalidad y experiencia de usuario.
+
