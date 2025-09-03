@@ -1,10 +1,10 @@
 # Sistema de Reservas de Canchas Deportivas
 
 ## Integrantes
-Andrés Calderón 
-Joaquín Fuenzalida 
-Bastián Kramarenko
-Benjamín Vallejos
+- Andrés Calderón 
+- Joaquín Fuenzalida 
+- Bastián Kramarenko
+- Benjamín Vallejos
 
 ## Descripción
 Este es un sistema completo de reservas de canchas deportivas convertido a HTML, CSS y JavaScript vanilla. Donde en la rama principal podemos ver la aplicacion final y en sus ramas las distintas versiones que fuimos guardando y las que utilizamos de punto de retorno.
@@ -218,4 +218,5 @@ Modifica las variables CSS en `styles.css`:
 ---
 
 **Nota**: Esta es una conversión completa de la aplicación React original a vanilla HTML/CSS/JavaScript, manteniendo toda la funcionalidad y experiencia de usuario.
+
 
