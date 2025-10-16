@@ -177,6 +177,7 @@
                     >
                         <i data-lucide="calendar"></i>
                         Mis Reservas
+                        <span v-if="userReservations.length > 0" class="reservation-count">({{ userReservations.length }})</span>
                     </button>
                 </div>
 
@@ -213,18 +214,26 @@
                             <h2>Mis Reservas</h2>
                             <p>Gestiona tus reservas actuales y próximas</p>
                         </div>
-                        <div v-if="selectedReservation" class="reservation-actions">
-                            <button class="btn btn-outline" @click="changeReservationTime">
-                                <i data-lucide="clock"></i>
-                                Cambiar Hora
+                        <div class="reservation-actions">
+                            <button class="btn btn-outline" @click="reloadReservations" :disabled="isLoadingReservations" title="Actualizar reservas">
+                                <i data-lucide="refresh-ccw" :class="{ 'animate-spin': isLoadingReservations }"></i>
+                                {{ isLoadingReservations ? 'Actualizando...' : 'Actualizar' }}
                             </button>
-                            <button class="btn btn-destructive" @click="showCancelDialog">
-                                Cancelar Reserva
-                            </button>
+                            <div v-if="selectedReservation" style="display: inline-flex; gap: 10px;">
+                                <button class="btn btn-outline" @click="changeReservationTime">
+                                    <i data-lucide="clock"></i>
+                                    Cambiar Hora
+                                </button>
+                                <button class="btn btn-destructive" @click="showCancelDialog">
+                                    Cancelar Reserva
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div class="reservations-content">
-                        <div v-if="reservations.length === 0" class="no-reservations">
+
+                        
+                        <div v-if="userReservations.length === 0" class="no-reservations">
                             <i data-lucide="calendar-x" class="no-reservations-icon"></i>
                             <h3>No tienes reservas</h3>
                             <p>¡Haz tu primera reserva y disfruta del deporte!</p>
@@ -234,7 +243,7 @@
                         </div>
                         <div v-else class="reservations-list">
                             <div 
-                                v-for="reservation in reservations" 
+                                v-for="reservation in userReservations" 
                                 :key="reservation.id"
                                 @click="selectReservation(reservation)"
                                 class="reservation-card"
@@ -469,6 +478,7 @@
                                 </ul>
                             </div>
                         </div>
+
                         <button 
                             v-if="selectedDate && selectedTime"
                             @click="showConfirmDialog"
@@ -476,6 +486,7 @@
                         >
                             Reservar por ${{ formatPrice(selectedCourt?.pricePerHour) }}
                         </button>
+
                     </div>
                 </div>
             </div>
@@ -568,7 +579,8 @@
         </div>
 
         <!-- Confirm Dialog Modal -->
-        <div v-if="showConfirm" class="modal" @click.self="hideConfirmDialog">
+        <div v-if="showConfirm" class="modal" @click.self="hideConfirmDialog" 
+             style="display: flex !important; z-index: 99999 !important; position: fixed !important;">
             <div class="modal-content">
                 <div class="modal-header">
                     <h3 class="modal-title">

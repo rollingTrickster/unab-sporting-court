@@ -159,6 +159,7 @@ createApp({
             reservations: [],
             selectedReservation: null,
             lastReservation: null,
+            isLoadingReservations: false,
             
             // Calendar state
             currentMonth: new Date().getMonth(),
@@ -176,6 +177,14 @@ createApp({
     },
     
     computed: {
+        // Filter reservations for current user only
+        userReservations() {
+            if (!this.user) return [];
+            const userFullName = `${this.user.nombre} ${this.user.apellido}`;
+            return this.reservations.filter(reservation => 
+                reservation.usuario === userFullName
+            );
+        },
         calendarDays() {
             const daysInMonth = new Date(this.currentYear, this.currentMonth + 1, 0).getDate();
             const firstDayOfMonth = new Date(this.currentYear, this.currentMonth, 1).getDay();
@@ -255,6 +264,58 @@ createApp({
     },
     
     methods: {
+        // Load reservations from localStorage or JSON file
+        async loadReservations() {
+            // First try to load from localStorage
+            const savedReservations = localStorage.getItem('courtReservations');
+            if (savedReservations) {
+                this.reservations = JSON.parse(savedReservations);
+                return;
+            }
+            
+            // If no localStorage data, try to load from JSON file
+            try {
+                const response = await fetch('./reservas.json');
+                if (response.ok) {
+                    const reservationsData = await response.json();
+                    // Transform the data to match the expected format
+                    this.reservations = reservationsData.map(reservation => ({
+                        id: reservation.id,
+                        usuario: reservation.usuario,
+                        cancha: this.getCourtNameById(reservation.canchaId),
+                        deporte: this.getSportByCourtId(reservation.canchaId),
+                        fecha: reservation.fecha,
+                        hora: reservation.hora,
+                        estado: reservation.estado,
+                        codigo: reservation.id // Use ID as code for now
+                    }));
+                    // Save to localStorage for future use
+                    localStorage.setItem('courtReservations', JSON.stringify(this.reservations));
+                }
+            } catch (error) {
+                console.log('No se pudieron cargar las reservas del archivo JSON:', error);
+                this.reservations = [];
+            }
+        },
+
+        // Helper method to get court name by ID
+        getCourtNameById(courtId) {
+            for (const sport in this.courtsData) {
+                const court = this.courtsData[sport].find(c => c.id === courtId);
+                if (court) return court.name;
+            }
+            return 'Cancha Desconocida';
+        },
+
+        // Helper method to get sport by court ID
+        getSportByCourtId(courtId) {
+            for (const sport in this.courtsData) {
+                const court = this.courtsData[sport].find(c => c.id === courtId);
+                if (court) return sport;
+            }
+            return 'Deporte Desconocido';
+        },
+
         // Authentication methods
         handleLogin() {
             // Simple validation - in real app, this would be an API call
@@ -436,6 +497,37 @@ createApp({
             this.currentView = 'dashboard';
             this.activeDashboardTab = 'reservations';
         },
+
+        // Method to reload reservations from JSON file
+        async reloadReservations() {
+            this.isLoadingReservations = true;
+            try {
+                const response = await fetch('./reservas.json');
+                if (response.ok) {
+                    const reservationsData = await response.json();
+                    // Transform the data to match the expected format
+                    this.reservations = reservationsData.map(reservation => ({
+                        id: reservation.id,
+                        usuario: reservation.usuario,
+                        cancha: this.getCourtNameById(reservation.canchaId),
+                        deporte: this.getSportByCourtId(reservation.canchaId),
+                        fecha: reservation.fecha,
+                        hora: reservation.hora,
+                        estado: reservation.estado,
+                        codigo: reservation.id // Use ID as code for now
+                    }));
+                    // Save to localStorage for future use
+                    localStorage.setItem('courtReservations', JSON.stringify(this.reservations));
+                    console.log('Reservas actualizadas desde el archivo JSON');
+                } else {
+                    console.error('No se pudo cargar el archivo de reservas');
+                }
+            } catch (error) {
+                console.error('Error al recargar las reservas:', error);
+            } finally {
+                this.isLoadingReservations = false;
+            }
+        },
         
         newReservation() {
             this.currentView = 'dashboard';
@@ -539,11 +631,8 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             });
         }
         
-        // Load existing reservations from localStorage if any
-        const savedReservations = localStorage.getItem('courtReservations');
-        if (savedReservations) {
-            this.reservations = JSON.parse(savedReservations);
-        }
+        // Load existing reservations from localStorage or JSON file
+        this.loadReservations();
     },
     
     watch: {
