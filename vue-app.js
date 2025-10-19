@@ -159,6 +159,7 @@ const app = createApp({
             reservations: [],
             selectedReservation: null,
             lastReservation: null,
+            modifyingReservation: null,
             isLoadingReservations: false,
             
             // Calendar state
@@ -490,37 +491,58 @@ const app = createApp({
         },
         
         confirmReservation() {
-            const reservationId = 'R' + String(Date.now()).slice(-6);
-            const reservationCode = this.generateReservationCode();
-            
-            const newReservation = {
-                id: reservationId,
-                codigo: reservationCode,
-                usuario: `${this.user.nombre} ${this.user.apellido}`,
-                canchaId: this.selectedCourt.id,
-                cancha: this.selectedCourt.name,
-                deporte: this.selectedSport,
-                fecha: this.selectedDate,
-                hora: this.selectedTime,
-                precio: this.selectedCourt.pricePerHour,
-                estado: 'Reservada'
-            };
-            
-            // Add the new reservation to the array
-            this.reservations.push(newReservation);
+            // Verificar si estamos modificando una reserva existente
+            if (this.modifyingReservation) {
+                // Modificar reserva existente
+                const reservationIndex = this.reservations.findIndex(r => r.id === this.modifyingReservation.id);
+                if (reservationIndex !== -1) {
+                    // Actualizar fecha y hora
+                    this.reservations[reservationIndex].fecha = this.selectedDate;
+                    this.reservations[reservationIndex].hora = this.selectedTime;
+                    this.reservations[reservationIndex].estado = 'Reservada';
+                    
+                    // Set as last reservation for success page
+                    this.lastReservation = this.reservations[reservationIndex];
+                    
+                    console.log('🔄 Reserva modificada exitosamente:', this.lastReservation.codigo);
+                }
+                
+                // Limpiar la referencia de modificación
+                this.modifyingReservation = null;
+            } else {
+                // Crear nueva reserva
+                const reservationId = 'R' + String(Date.now()).slice(-6);
+                const reservationCode = this.generateReservationCode();
+                
+                const newReservation = {
+                    id: reservationId,
+                    codigo: reservationCode,
+                    usuario: `${this.user.nombre} ${this.user.apellido}`,
+                    canchaId: this.selectedCourt.id,
+                    cancha: this.selectedCourt.name,
+                    deporte: this.selectedSport,
+                    fecha: this.selectedDate,
+                    hora: this.selectedTime,
+                    precio: this.selectedCourt.pricePerHour,
+                    estado: 'Reservada'
+                };
+                
+                // Add the new reservation to the array
+                this.reservations.push(newReservation);
+                
+                // Set as last reservation for success page
+                this.lastReservation = newReservation;
+                
+                console.log('✅ Reserva creada exitosamente:', newReservation.codigo);
+            }
             
             // Explicitly save to localStorage
             localStorage.setItem('courtReservations', JSON.stringify(this.reservations));
             
-            // Set as last reservation for success page
-            this.lastReservation = newReservation;
-            
             // Log for debugging
-            console.log('✅ Reserva creada exitosamente:', newReservation);
             console.log('📊 Total de reservas en sistema:', this.reservations.length);
             console.log('👤 Usuario actual:', `${this.user.nombre} ${this.user.apellido}`);
             console.log('🎯 Reservas filtradas del usuario:', this.userReservations.length);
-            console.log('📝 Detalle de reservas del usuario:', JSON.stringify(this.userReservations, null, 2));
             
             // Force reactivity update
             this.$forceUpdate();
@@ -560,7 +582,12 @@ const app = createApp({
         
         confirmCancelReservation() {
             if (this.selectedReservation) {
-                this.reservations = this.reservations.filter(r => r.id !== this.selectedReservation.id);
+                // Cambiar el estado a "Cancelada" en lugar de eliminar
+                const reservationIndex = this.reservations.findIndex(r => r.id === this.selectedReservation.id);
+                if (reservationIndex !== -1) {
+                    this.reservations[reservationIndex].estado = 'Cancelada';
+                    console.log('✅ Reserva cancelada:', this.reservations[reservationIndex].codigo);
+                }
                 this.selectedReservation = null;
             }
             this.hideCancelDialog();
@@ -569,12 +596,21 @@ const app = createApp({
         changeReservationTime() {
             if (!this.selectedReservation) return;
             
+            // Guardar la reserva que se está modificando
+            this.modifyingReservation = { ...this.selectedReservation };
+            
             // Find the court and sport
             this.selectedSport = this.selectedReservation.deporte;
             this.selectedCourt = this.getAvailableCourts(this.selectedSport)
                 .find(court => court.id === this.selectedReservation.canchaId);
             
+            // Pre-seleccionar la fecha actual
+            this.selectedDate = this.selectedReservation.fecha;
+            
+            // Cambiar a la vista del calendario
             this.currentView = 'calendar';
+            
+            console.log('🔄 Modificando reserva:', this.modifyingReservation.codigo);
         },
         
         // Success page methods

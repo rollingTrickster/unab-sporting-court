@@ -715,9 +715,57 @@ body {
     box-shadow: 0 0 0 1px var(--primary);
 }
 
+.reservation-card.cancelled {
+    opacity: 0.6;
+}
+
+.reservation-card.cancelled:hover {
+    opacity: 0.7;
+}
+
 .reservation-sport-icon {
     font-size: 2rem;
     flex-shrink: 0;
+}
+
+.reservation-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-icon i {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.btn-edit {
+    color: var(--color-blue-600);
+}
+
+.btn-edit:hover {
+    background-color: var(--color-blue-100);
+}
+
+.btn-cancel {
+    color: var(--color-red-600);
+}
+
+.btn-cancel:hover {
+    background-color: var(--color-red-100);
 }
 
 .reservation-content {
