@@ -170,6 +170,12 @@ const app = createApp({
             ],
             weekDays: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
             
+            // Weather API
+            weatherApiKey: '61f6915417ca53ccd95fb615cc7fb019',
+            weatherData: null,
+            weatherByDate: {},
+            weatherByHour: {},
+            
             // Modal state
             showConfirm: false,
             showCancel: false
@@ -735,6 +741,116 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             });
         },
         
+        // Weather API methods
+        async fetchWeatherData() {
+            try {
+                // Santiago, Chile coordinates
+                const lat = -33.4489;
+                const lon = -70.6693;
+                
+                const response = await fetch(
+                    `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${this.weatherApiKey}&units=metric&lang=es`
+                );
+                
+                if (!response.ok) {
+                    throw new Error('Error al obtener datos del clima');
+                }
+                
+                const data = await response.json();
+                this.weatherData = data;
+                this.processWeatherData(data);
+                console.log('✅ Datos del clima cargados correctamente');
+            } catch (error) {
+                console.error('❌ Error al cargar el clima:', error);
+            }
+        },
+        
+        processWeatherData(data) {
+            // Procesar datos del clima por fecha y hora
+            this.weatherByDate = {};
+            this.weatherByHour = {};
+            
+            data.list.forEach(item => {
+                const dateTime = new Date(item.dt * 1000);
+                const dateStr = dateTime.toISOString().split('T')[0];
+                const hour = dateTime.getHours();
+                const hourStr = `${String(hour).padStart(2, '0')}:00`;
+                
+                // Guardar clima por fecha (promedio del día)
+                if (!this.weatherByDate[dateStr]) {
+                    this.weatherByDate[dateStr] = {
+                        temp: item.main.temp,
+                        weather: item.weather[0].main,
+                        description: item.weather[0].description,
+                        icon: item.weather[0].icon,
+                        count: 1
+                    };
+                } else {
+                    this.weatherByDate[dateStr].temp += item.main.temp;
+                    this.weatherByDate[dateStr].count += 1;
+                }
+                
+                // Guardar clima por fecha y hora específica
+                const key = `${dateStr}_${hourStr}`;
+                this.weatherByHour[key] = {
+                    temp: Math.round(item.main.temp),
+                    weather: item.weather[0].main,
+                    description: item.weather[0].description,
+                    icon: item.weather[0].icon
+                };
+            });
+            
+            // Calcular promedio de temperatura por día
+            Object.keys(this.weatherByDate).forEach(date => {
+                const data = this.weatherByDate[date];
+                data.temp = Math.round(data.temp / data.count);
+            });
+        },
+        
+        getWeatherIcon(weather) {
+            const iconMap = {
+                'Clear': '☀️',
+                'Clouds': '☁️',
+                'Rain': '🌧️',
+                'Drizzle': '🌦️',
+                'Thunderstorm': '⛈️',
+                'Snow': '🌨️',
+                'Mist': '🌫️',
+                'Fog': '🌫️',
+                'Haze': '🌫️'
+            };
+            return iconMap[weather] || '🌤️';
+        },
+        
+        getWeatherForDate(dateStr) {
+            if (!this.weatherByDate[dateStr]) return null;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const targetDate = new Date(dateStr + 'T00:00:00');
+            const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+            
+            // Solo mostrar clima para los próximos 8 días
+            if (diffDays < 0 || diffDays > 8) return null;
+            
+            return this.weatherByDate[dateStr];
+        },
+        
+        getWeatherForHour(dateStr, hour) {
+            const key = `${dateStr}_${hour}`;
+            if (!this.weatherByHour[key]) return null;
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const targetDate = new Date(dateStr + 'T00:00:00');
+            const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
+            
+            // Solo mostrar clima para los próximos 8 días
+            if (diffDays < 0 || diffDays > 8) return null;
+            
+            return this.weatherByHour[key];
+        },
+        
         getStatusClass(status) {
             switch (status) {
                 case 'Reservada':
@@ -759,6 +875,9 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
         
         // Load existing reservations from localStorage or JSON file
         this.loadReservations();
+        
+        // Load weather data
+        this.fetchWeatherData();
         
         // Log initial state
         console.log('App montada. Reservas en localStorage:', localStorage.getItem('courtReservations'));
