@@ -60,7 +60,13 @@ const app = createApp({
                         rating: 4.8,
                         pricePerHour: 45000,
                         features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Césped Sintético', 'Marcador Electrónico'],
-                        available: true
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Libertad 1348, Viña del Mar',
+                            lat: -33.0244,
+                            lon: -71.5519
+                        }
                     },
                     {
                         id: 'CAN-02',
@@ -70,7 +76,13 @@ const app = createApp({
                         rating: 4.6,
                         pricePerHour: 35000,
                         features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Césped Natural', 'Gradas Cubiertas'],
-                        available: true
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Marina 37, Viña del Mar',
+                            lat: -33.0153,
+                            lon: -71.5500
+                        }
                     },
                     {
                         id: 'CAN-03',
@@ -80,7 +92,13 @@ const app = createApp({
                         rating: 4.7,
                         pricePerHour: 40000,
                         features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Césped Híbrido', 'Sistema de Riego'],
-                        available: true
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Los Castaños 155, Viña del Mar',
+                            lat: -33.0365,
+                            lon: -71.5320
+                        }
                     }
                 ],
                 'Tenis': [
@@ -92,7 +110,13 @@ const app = createApp({
                         rating: 4.9,
                         pricePerHour: 25000,
                         features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Polvo de Ladrillo', 'Red Profesional'],
-                        available: true
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Sporting 2950, Viña del Mar',
+                            lat: -33.0287,
+                            lon: -71.5210
+                        }
                     },
                     {
                         id: 'CAN-05',
@@ -102,7 +126,13 @@ const app = createApp({
                         rating: 4.5,
                         pricePerHour: 20000,
                         features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Superficie Dura', 'Gradas'],
-                        available: true
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. San Martín 180, Viña del Mar',
+                            lat: -33.0325,
+                            lon: -71.5538
+                        }
                     },
                     {
                         id: 'CAN-06',
@@ -112,39 +142,63 @@ const app = createApp({
                         rating: 4.8,
                         pricePerHour: 30000,
                         features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Superficie Dura', 'Techo Retráctil'],
-                        available: true
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Valparaíso 567, Viña del Mar',
+                            lat: -33.0198,
+                            lon: -71.5485
+                        }
                     }
                 ],
                 'Pádel': [
                     {
                         id: 'CAN-07',
-                        name: 'Pista Pádel #1',
-                        description: 'Cancha de pádel profesional con superficie de césped sintético',
+                        name: 'Cancha Pádel #1',
+                        description: 'Cancha de pádel indoor con cristal panorámico',
                         capacity: 4,
-                        rating: 4.7,
-                        pricePerHour: 22000,
-                        features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Césped Sintético', 'Paredes Cristal'],
-                        available: true
+                        rating: 4.9,
+                        pricePerHour: 28000,
+                        features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Cristal Panorámico', 'Climatizada'],
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Libertad 1348, Viña del Mar',
+                            lat: -33.0245,
+                            lon: -71.5518
+                        }
                     },
                     {
                         id: 'CAN-08',
-                        name: 'Pista Pádel #2',
-                        description: 'Cancha de pádel al aire libre con excelente ventilación',
+                        name: 'Cancha Pádel #2',
+                        description: 'Cancha de pádel outdoor con césped sintético premium',
                         capacity: 4,
                         rating: 4.6,
-                        pricePerHour: 18000,
-                        features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Al Aire Libre', 'Superficie Premium'],
-                        available: true
+                        pricePerHour: 22000,
+                        features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Césped Sintético', 'Gradas'],
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Los Castaños 1455, Viña del Mar',
+                            lat: -33.0156,
+                            lon: -71.5425
+                        }
                     },
                     {
                         id: 'CAN-09',
-                        name: 'Pista Pádel #3',
-                        description: 'Cancha de pádel cubierta para todas las condiciones climáticas',
+                        name: 'Cancha Pádel #3',
+                        description: 'Cancha de pádel techada con las mejores instalaciones',
                         capacity: 4,
-                        rating: 4.9,
+                        rating: 4.8,
                         pricePerHour: 26000,
-                        features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Cubierta', 'Aire Acondicionado'],
-                        available: true
+                        features: ['Vestuarios', 'Estacionamiento', 'Iluminación LED', 'Techo Retráctil', 'Bar'],
+                        available: true,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. 15 Norte 961, Viña del Mar',
+                            lat: -33.0178,
+                            lon: -71.5512
+                        }
                     }
                 ]
             },
@@ -176,6 +230,7 @@ const app = createApp({
             weatherData: null,
             weatherByDate: {},
             weatherByHour: {},
+            weatherByLocation: {}, // Clima por ubicación de cancha
             
             // Modal state
             showConfirm: false,
@@ -427,9 +482,13 @@ const app = createApp({
             this.currentView = 'court-selection';
         },
         
-        selectCourt(court) {
+        async selectCourt(court) {
             if (!court.available) return;
             this.selectedCourt = court;
+            
+            // Cargar clima específico de la ubicación de la cancha
+            await this.fetchWeatherForCourt(court);
+            
             this.currentView = 'calendar';
         },
         
@@ -524,7 +583,11 @@ const app = createApp({
                     fecha: this.selectedDate,
                     hora: this.selectedTime,
                     precio: this.selectedCourt.pricePerHour,
-                    estado: 'Reservada'
+                    estado: 'Reservada',
+                    ubicacion: this.selectedCourt.location ? {
+                        city: this.selectedCourt.location.city,
+                        address: this.selectedCourt.location.address
+                    } : null
                 };
                 
                 // Add the new reservation to the array
@@ -778,12 +841,8 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
         },
         
         // Weather API methods
-        async fetchWeatherData() {
+        async fetchWeatherData(lat = -33.4489, lon = -70.6693, locationKey = 'default') {
             try {
-                // Santiago, Chile coordinates
-                const lat = -33.4489;
-                const lon = -70.6693;
-                
                 const response = await fetch(
                     `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${this.weatherApiKey}&units=metric&lang=es`
                 );
@@ -793,12 +852,39 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
                 }
                 
                 const data = await response.json();
-                this.weatherData = data;
-                this.processWeatherData(data);
-                console.log('✅ Datos del clima cargados correctamente');
+                
+                // Si es la ubicación por defecto, usar las variables globales
+                if (locationKey === 'default') {
+                    this.weatherData = data;
+                    this.processWeatherData(data);
+                } else {
+                    // Guardar clima específico por ubicación
+                    this.weatherByLocation[locationKey] = data;
+                    this.processWeatherDataForLocation(data, locationKey);
+                }
+                
+                console.log(`✅ Datos del clima cargados correctamente para ${locationKey}`);
             } catch (error) {
-                console.error('❌ Error al cargar el clima:', error);
+                console.error(`❌ Error al cargar el clima para ${locationKey}:`, error);
             }
+        },
+        
+        async fetchWeatherForCourt(court) {
+            if (!court || !court.location) return;
+            
+            const locationKey = court.id;
+            
+            // Si ya tenemos datos del clima para esta ubicación, no volver a consultar
+            if (this.weatherByLocation[locationKey]) {
+                console.log(`📦 Usando clima cacheado para ${court.location.city}`);
+                return;
+            }
+            
+            await this.fetchWeatherData(
+                court.location.lat,
+                court.location.lon,
+                locationKey
+            );
         },
         
         processWeatherData(data) {
@@ -843,6 +929,57 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             });
         },
         
+        processWeatherDataForLocation(data, locationKey) {
+            // Procesar datos del clima por ubicación específica
+            if (!this.weatherByLocation[locationKey]) {
+                this.weatherByLocation[locationKey] = {};
+            }
+            
+            const weatherByDate = {};
+            const weatherByHour = {};
+            
+            data.list.forEach(item => {
+                const dateTime = new Date(item.dt * 1000);
+                const dateStr = dateTime.toISOString().split('T')[0];
+                const hour = dateTime.getHours();
+                const hourStr = `${String(hour).padStart(2, '0')}:00`;
+                
+                // Guardar clima por fecha
+                if (!weatherByDate[dateStr]) {
+                    weatherByDate[dateStr] = {
+                        temp: item.main.temp,
+                        weather: item.weather[0].main,
+                        description: item.weather[0].description,
+                        icon: item.weather[0].icon,
+                        count: 1
+                    };
+                } else {
+                    weatherByDate[dateStr].temp += item.main.temp;
+                    weatherByDate[dateStr].count += 1;
+                }
+                
+                // Guardar clima por hora
+                const key = `${dateStr}_${hourStr}`;
+                weatherByHour[key] = {
+                    temp: Math.round(item.main.temp),
+                    weather: item.weather[0].main,
+                    description: item.weather[0].description,
+                    icon: item.weather[0].icon
+                };
+            });
+            
+            // Calcular promedio
+            Object.keys(weatherByDate).forEach(date => {
+                const data = weatherByDate[date];
+                data.temp = Math.round(data.temp / data.count);
+            });
+            
+            this.weatherByLocation[locationKey] = {
+                byDate: weatherByDate,
+                byHour: weatherByHour
+            };
+        },
+        
         getWeatherIcon(weather) {
             const iconMap = {
                 'Clear': '☀️',
@@ -859,7 +996,14 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
         },
         
         getWeatherForDate(dateStr) {
-            if (!this.weatherByDate[dateStr]) return null;
+            // Usar clima de la cancha seleccionada si existe
+            let weatherData = this.weatherByDate;
+            
+            if (this.selectedCourt && this.weatherByLocation[this.selectedCourt.id]) {
+                weatherData = this.weatherByLocation[this.selectedCourt.id].byDate;
+            }
+            
+            if (!weatherData[dateStr]) return null;
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -869,12 +1013,19 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             // Solo mostrar clima para los próximos 8 días
             if (diffDays < 0 || diffDays > 8) return null;
             
-            return this.weatherByDate[dateStr];
+            return weatherData[dateStr];
         },
         
         getWeatherForHour(dateStr, hour) {
+            // Usar clima de la cancha seleccionada si existe
+            let weatherData = this.weatherByHour;
+            
+            if (this.selectedCourt && this.weatherByLocation[this.selectedCourt.id]) {
+                weatherData = this.weatherByLocation[this.selectedCourt.id].byHour;
+            }
+            
             const key = `${dateStr}_${hour}`;
-            if (!this.weatherByHour[key]) return null;
+            if (!weatherData[key]) return null;
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -884,7 +1035,7 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             // Solo mostrar clima para los próximos 8 días
             if (diffDays < 0 || diffDays > 8) return null;
             
-            return this.weatherByHour[key];
+            return weatherData[key];
         },
         
         getStatusClass(status) {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservas de Canchas - Vue.js</title>
-    <link rel="stylesheet" href="vue-styles.css?v=14.0">
+    <link rel="stylesheet" href="vue-styles.css?v=17.0">
     <link href="https://unpkg.com/lucide@latest/dist/umd/lucide.js" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -258,7 +258,8 @@
                                     <div class="reservation-details">
                                         <p><i data-lucide="calendar"></i> {{ formatDate(reservation.fecha) }}</p>
                                         <p><i data-lucide="clock"></i> {{ reservation.hora }}</p>
-                                        <p><i data-lucide="map-pin"></i> {{ reservation.deporte }}</p>
+                                        <p><i data-lucide="dribbble"></i> {{ reservation.deporte }}</p>
+                                        <p v-if="reservation.ubicacion"><i data-lucide="map-pin"></i> {{ reservation.ubicacion.city }}, Chile</p>
                                     </div>
                                 </div>
                                 <div class="reservation-code">
@@ -494,6 +495,10 @@
                                         <i data-lucide="dollar-sign"></i>
                                         <span>Precio: ${{ formatPrice(selectedCourt?.pricePerHour) }}/hora</span>
                                     </div>
+                                    <div class="info-item" v-if="selectedCourt?.location">
+                                        <i data-lucide="map-pin"></i>
+                                        <span>{{ selectedCourt.location.city }}, Chile</span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="court-features-full">
@@ -559,6 +564,13 @@
                                     <div>
                                         <span class="detail-label">Total</span>
                                         <span class="detail-value">${{ formatPrice(lastReservation?.precio) }}</span>
+                                    </div>
+                                </div>
+                                <div class="detail-item" v-if="lastReservation?.ubicacion">
+                                    <i data-lucide="navigation"></i>
+                                    <div>
+                                        <span class="detail-label">Ubicación</span>
+                                        <span class="detail-value">{{ lastReservation.ubicacion.city }}, Chile</span>
                                     </div>
                                 </div>
                             </div>
@@ -633,6 +645,9 @@
                         <div class="detail-row">
                             <strong>Precio:</strong> ${{ formatPrice(selectedCourt?.pricePerHour) }}
                         </div>
+                        <div class="detail-row" v-if="selectedCourt?.location">
+                            <strong>Ubicación:</strong> {{ selectedCourt.location.city }}, Chile
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -672,6 +687,9 @@
                         <div class="detail-row">
                             <strong>Código:</strong> {{ selectedReservation.codigo }}
                         </div>
+                        <div class="detail-row" v-if="selectedReservation.ubicacion">
+                            <strong>Ubicación:</strong> {{ selectedReservation.ubicacion.city }}, Chile
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -689,6 +707,6 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="vue-app.js?v=14.0"></script>
+    <script src="vue-app.js?v=17.0"></script>
 </body>
 </html>
