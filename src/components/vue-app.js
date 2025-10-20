@@ -226,7 +226,7 @@ const app = createApp({
             weekDays: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
             
             // Weather API
-            weatherApiKey: '61f6915417ca53ccd95fb615cc7fb019',
+            weatherApiKey: (window.ENV && window.ENV.OPENWEATHER_API_KEY) || '61f6915417ca53ccd95fb615cc7fb019',
             weatherData: null,
             weatherByDate: {},
             weatherByHour: {},
@@ -842,16 +842,15 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
         
         // Weather API methods
         async fetchWeatherData(lat = -33.4489, lon = -70.6693, locationKey = 'default') {
+            if (!this.weatherApiKey) {
+                console.warn('⚠️ OPENWEATHER_API_KEY no configurada. No se cargará el clima.');
+                return;
+            }
+            
             try {
-                const response = await fetch(
-                    `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${this.weatherApiKey}&units=metric&lang=es`
-                );
-                
-                if (!response.ok) {
-                    throw new Error('Error al obtener datos del clima');
-                }
-                
-                const data = await response.json();
+                console.log(`🌤️ Solicitando clima para ${locationKey} (lat: ${lat}, lon: ${lon})...`);
+                const data = await ApiService.fetchWeather(lat, lon, this.weatherApiKey);
+                console.log(`📦 Datos del clima recibidos para ${locationKey}:`, data.list ? `${data.list.length} registros` : 'sin datos');
                 
                 // Si es la ubicación por defecto, usar las variables globales
                 if (locationKey === 'default') {
@@ -892,6 +891,8 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             this.weatherByDate = {};
             this.weatherByHour = {};
             
+            console.log('🔄 Procesando datos del clima (default location)...');
+            
             data.list.forEach(item => {
                 const dateTime = new Date(item.dt * 1000);
                 const dateStr = dateTime.toISOString().split('T')[0];
@@ -927,13 +928,13 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
                 const data = this.weatherByDate[date];
                 data.temp = Math.round(data.temp / data.count);
             });
+            
+            console.log(`📅 weatherByDate procesado con ${Object.keys(this.weatherByDate).length} fechas:`, Object.keys(this.weatherByDate));
+            console.log(`⏰ weatherByHour procesado con ${Object.keys(this.weatherByHour).length} horas`);
         },
         
         processWeatherDataForLocation(data, locationKey) {
-            // Procesar datos del clima por ubicación específica
-            if (!this.weatherByLocation[locationKey]) {
-                this.weatherByLocation[locationKey] = {};
-            }
+            console.log(`🔄 Procesando datos del clima para ubicación: ${locationKey}...`);
             
             const weatherByDate = {};
             const weatherByHour = {};
@@ -978,6 +979,9 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
                 byDate: weatherByDate,
                 byHour: weatherByHour
             };
+            
+            console.log(`📅 weatherByLocation[${locationKey}].byDate con ${Object.keys(weatherByDate).length} fechas:`, Object.keys(weatherByDate));
+            console.log(`⏰ weatherByLocation[${locationKey}].byHour con ${Object.keys(weatherByHour).length} horas`);
         },
         
         getWeatherIcon(weather) {
@@ -1001,9 +1005,15 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             
             if (this.selectedCourt && this.weatherByLocation[this.selectedCourt.id]) {
                 weatherData = this.weatherByLocation[this.selectedCourt.id].byDate;
+                console.log(`🔍 Buscando clima para ${dateStr} en cancha ${this.selectedCourt.id}`);
+            } else {
+                console.log(`🔍 Buscando clima para ${dateStr} en datos globales`);
             }
             
-            if (!weatherData[dateStr]) return null;
+            if (!weatherData[dateStr]) {
+                console.log(`⚠️ No hay clima para fecha: ${dateStr}`);
+                return null;
+            }
             
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -1011,8 +1021,12 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
             
             // Solo mostrar clima para los próximos 8 días
-            if (diffDays < 0 || diffDays > 8) return null;
+            if (diffDays < 0 || diffDays > 8) {
+                console.log(`⚠️ Fecha ${dateStr} fuera de rango (${diffDays} días desde hoy)`);
+                return null;
+            }
             
+            console.log(`✅ Clima encontrado para ${dateStr}:`, weatherData[dateStr]);
             return weatherData[dateStr];
         },
         

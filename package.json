@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "http-server . -p 8080 -c-1 -o",
     "start": "http-server . -p 8080",
-    "serve": "npx http-server . -p 8080 -c-1 -o"
+    "serve": "npx http-server . -p 8080 -c-1 -o",
+    "dev:8081": "http-server . -p 8081 -c-1 -o",
+    "dev:random": "http-server . -p 0 -c-1 -o"
   },
   "keywords": ["vue", "reservas", "canchas", "deportes"],
   "author": "Tu nombre",
