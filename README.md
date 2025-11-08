@@ -7,10 +7,100 @@
 - Benjamín Vallejos
 
 ## Descripción
-Este es un sistema completo de reservas de canchas deportivas convertido a HTML, CSS y JavaScript vanilla. Donde en la rama principal podemos ver la aplicacion final y en sus ramas las distintas versiones que fuimos guardando y las que utilizamos de punto de retorno.
+Este es un sistema completo de reservas de canchas deportivas con frontend en HTML/CSS/JavaScript vanilla y **backend profesional con FastAPI**. El sistema incluye autenticación JWT, encriptación de contraseñas con bcrypt, y documentación automática de la API.
+
+## 🚀 Inicio Rápido
+
+### Backend (FastAPI)
+```powershell
+cd backend
+.\start.ps1
+```
+
+El servidor estará disponible en:
+- **API**: http://localhost:8000
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Frontend
+```powershell
+npm run dev
+```
+
+El frontend estará disponible en http://localhost:8080
+
+📖 **[Ver documentación completa del backend](backend/README.md)**
 
 ## Despliegue con apache
 Para realizar el despliegue con apache utilizaremos XAMPP, donde luego de instalar este programa debe descargar el archivo comprimido de este Github, descomprimirlo y guardar esta carpeta, posterior a esto abriremos XAMPP donde en su interfaz principal presionaremos el boton de "Explorer" este abrira la ubicacion de los archivos para correr XAMPP, donde nos dirigiremos a la carpeta "htdocs", y copiaremos la carpeta descomprimida de los archivos de la aplicacion web, posterior a esto volveremos al XAMPP y en el apartado de Apache le daremos a "Start" y luego de esperar a que se inicie presionaremos el boton "Admin", este abrira en nuestro buscador la pagina principal de XAMPP. En esta pagina nos dirigiremos a la barra superior de nuestro buscador, editaremos el link y colocaremos "localhost/(nombre de la carpeta)" y le daremos a buscar. Luego de esto, nos deberia dirigir a nuestra pagina ya desplegada.
+
+## 🔐 Backend con FastAPI
+
+### Características del Backend
+- ✅ **FastAPI Framework**: API moderna y rápida
+- ✅ **Autenticación JWT**: Tokens seguros con expiración
+- ✅ **Encriptación bcrypt**: Contraseñas hasheadas de forma segura
+- ✅ **Documentación automática**: Swagger UI y ReDoc generados automáticamente
+- ✅ **Base de datos SQLAlchemy**: ORM potente con SQLite
+- ✅ **Sistema de roles**: Usuarios normales y administradores
+- ✅ **CORS configurado**: Integración con el frontend
+- ✅ **Validación Pydantic**: Validación automática de datos
+
+### Credenciales de Prueba
+Después de ejecutar `init_db.py`:
+- **Admin**: `admin@unab.cl` / `admin123`
+- **Usuario**: `usuario@unab.cl` / `usuario123`
+
+### Endpoints Principales
+
+#### Autenticación
+- `POST /api/v1/auth/register` - Registrar usuario
+- `POST /api/v1/auth/login` - Login (form-data)
+- `POST /api/v1/auth/login/json` - Login (JSON)
+
+#### Usuarios
+- `GET /api/v1/users/me` - Perfil actual 🔒
+- `GET /api/v1/users` - Listar usuarios 🔒👑
+
+#### Canchas
+- `GET /api/v1/courts` - Listar canchas
+- `GET /api/v1/courts/{id}` - Ver cancha
+- `POST /api/v1/courts` - Crear cancha 🔒👑
+
+#### Reservas
+- `POST /api/v1/reservations` - Crear reserva 🔒
+- `GET /api/v1/reservations` - Mis reservas 🔒
+- `GET /api/v1/reservations/{id}` - Ver reserva 🔒
+- `PUT /api/v1/reservations/{id}` - Actualizar 🔒
+- `DELETE /api/v1/reservations/{id}` - Cancelar 🔒
+
+🔒 = Requiere autenticación | 👑 = Requiere admin
+
+### Ejemplo de Uso del API
+
+```python
+import requests
+
+# Login
+response = requests.post(
+    "http://localhost:8000/api/v1/auth/login/json",
+    json={"email": "usuario@unab.cl", "password": "usuario123"}
+)
+token = response.json()["access_token"]
+
+# Crear reserva
+headers = {"Authorization": f"Bearer {token}"}
+response = requests.post(
+    "http://localhost:8000/api/v1/reservations",
+    headers=headers,
+    json={
+        "court_id": 1,
+        "date": "2025-11-15",
+        "time": "15:00",
+        "duration": 2
+    }
+)
+```
 ## Funcionalidades
 
 ### Autenticación
@@ -48,16 +138,42 @@ Para realizar el despliegue con apache utilizaremos XAMPP, donde luego de instal
 
 ```
 /
-├── index.html          # Archivo principal HTML
-├── styles.css          # Estilos CSS completos
-├── app.js             # Lógica JavaScript de la aplicación
-├── canchas.json       # Datos estructurados de las canchas
-├── reservas.json      # Datos estructurados de las reservas
-├── package.json       # Configuración del proyecto (mantenido)
-└── README_VANILLA.md  # Este archivo
+├── backend/              # Backend FastAPI
+│   ├── main.py          # Aplicación principal
+│   ├── auth.py          # Sistema de autenticación JWT
+│   ├── models.py        # Modelos de base de datos
+│   ├── schemas.py       # Schemas Pydantic
+│   ├── database.py      # Configuración de BD
+│   ├── init_db.py       # Inicializador de BD
+│   ├── requirements.txt # Dependencias Python
+│   ├── .env             # Variables de entorno
+│   ├── start.ps1        # Script de inicio rápido
+│   └── README.md        # Documentación del backend
+├── src/
+│   ├── components/
+│   │   └── vue-app.js   # Componente Vue
+│   └── services/
+│       └── api.js       # Servicios de API
+├── index.html           # Archivo principal HTML
+├── styles.css           # Estilos CSS completos
+├── app.js              # Lógica JavaScript de la aplicación
+├── canchas.json        # Datos estructurados de las canchas
+├── reservas.json       # Datos estructurados de las reservas
+├── package.json        # Configuración del proyecto
+└── README.md           # Este archivo
 ```
 
 ## Tecnologías Utilizadas
+
+### Backend
+- **FastAPI**: Framework web moderno y rápido
+- **SQLAlchemy**: ORM para Python
+- **Pydantic**: Validación de datos
+- **JWT (python-jose)**: Autenticación con tokens
+- **bcrypt (passlib)**: Encriptación de contraseñas
+- **Uvicorn**: Servidor ASGI de alto rendimiento
+
+### Frontend
 - **HTML5**: Estructura semántica y accesible
 - **CSS3**: Estilos modernos con variables CSS y Grid/Flexbox
 - **JavaScript ES6+**: Lógica de aplicación vanilla sin frameworks
@@ -209,7 +325,7 @@ Modifica las variables CSS en `styles.css`:
 - **Notificaciones**: Alertas básicas del navegador
 
 ## Posibles Mejoras Futuras
-- Integración con backend real
+- ~~Integración con backend real~~ ✅ **¡COMPLETADO!**
 - Persistencia en localStorage
 - Sistema de pagos online
 - Notificaciones push
@@ -217,9 +333,58 @@ Modifica las variables CSS en `styles.css`:
 - Geolocalización de canchas
 - Sistema de reviews y comentarios
 
+## 📁 Archivos del Proyecto
+
+### 🔧 Backend (FastAPI)
+- `backend/main.py` - Aplicación principal con todos los endpoints
+- `backend/auth.py` - Sistema de autenticación JWT + bcrypt
+- `backend/models.py` - Modelos de base de datos SQLAlchemy
+- `backend/schemas.py` - Validación con Pydantic
+- `backend/database.py` - Configuración de base de datos
+- `backend/init_db.py` - Script de inicialización con datos de prueba
+- `backend/test_api.py` - Suite de pruebas automatizadas
+- `backend/requirements.txt` - Dependencias Python
+- `backend/.env` - Variables de entorno (configurado)
+- `backend/README.md` - Documentación completa del backend
+
+### 📖 Documentación
+- `QUICKSTART.md` - ⚡ Comandos rápidos y referencia
+- `INSTALL.md` - 🚀 Guía de instalación completa paso a paso
+- `INTEGRATION.md` - 🔗 Guía de integración frontend-backend
+- `backend/SUMMARY.md` - ✅ Resumen de todo lo implementado
+
+### 🎨 Frontend
+- `index.html` - Aplicación principal
+- `app.js` - Lógica JavaScript
+- `styles.css` - Estilos
+- `src/services/api.js` - Servicios de API
+- `src/components/vue-app.js` - Componente Vue
+
+## 🚀 Enlaces Rápidos
+
+Una vez que inicies el proyecto:
+
+| Recurso | URL | Descripción |
+|---------|-----|-------------|
+| 🌐 Frontend | http://localhost:8080 | Aplicación web |
+| 🔌 API Backend | http://localhost:8000 | API REST |
+| 📖 Swagger UI | http://localhost:8000/docs | Documentación interactiva |
+| 📘 ReDoc | http://localhost:8000/redoc | Documentación alternativa |
+| ❤️ Health Check | http://localhost:8000/health | Estado del servidor |
+
+## 👥 Contribuciones
+
+Este proyecto fue desarrollado por:
+- Andrés Calderón
+- Joaquín Fuenzalida
+- Bastián Kramarenko
+- Benjamín Vallejos
+
 ---
 
-**Nota**: Esta es una conversión completa de la aplicación React original a vanilla HTML/CSS/JavaScript, manteniendo toda la funcionalidad y experiencia de usuario.
+**Nota**: Esta es una aplicación completa con frontend vanilla y backend profesional con FastAPI, incluyendo autenticación JWT, encriptación bcrypt, y documentación automática.
+
+**Desarrollado con ❤️ para UNAB Sporting Court**
 
 
 
