@@ -337,12 +337,12 @@ const app = createApp({
     methods: {
         // Load reservations from localStorage or JSON file
         async loadReservations() {
-            // First try to load from localStorage
+            // Mantener como backup/fallback
             const savedReservations = localStorage.getItem('courtReservations');
             if (savedReservations) {
                 try {
                     this.reservations = JSON.parse(savedReservations);
-                    console.log('Reservas cargadas desde localStorage:', this.reservations.length);
+                    console.log('Reservas cargadas desde localStorage (backup):', this.reservations.length);
                     return;
                 } catch (error) {
                     console.error('Error al parsear reservas de localStorage:', error);
@@ -350,12 +350,11 @@ const app = createApp({
                 }
             }
             
-            // If no localStorage data, try to load from JSON file
+            // Cargar desde JSON como fallback
             try {
                 const response = await fetch('./reservas.json');
                 if (response.ok) {
                     const reservationsData = await response.json();
-                    // Transform the data to match the expected format
                     this.reservations = reservationsData.map(reservation => ({
                         id: reservation.id,
                         usuario: reservation.usuario,
@@ -364,15 +363,102 @@ const app = createApp({
                         fecha: reservation.fecha,
                         hora: reservation.hora,
                         estado: reservation.estado,
-                        codigo: reservation.id // Use ID as code for now
+                        codigo: reservation.id
                     }));
-                    // Save to localStorage for future use
                     localStorage.setItem('courtReservations', JSON.stringify(this.reservations));
                     console.log('Reservas cargadas desde archivo JSON:', this.reservations.length);
                 }
             } catch (error) {
                 console.log('No se pudieron cargar las reservas del archivo JSON:', error);
                 this.reservations = [];
+            }
+        },
+
+        // NUEVO: Cargar reservas del usuario desde la API
+        async loadUserReservations() {
+            if (!ApiService.isAuthenticated()) {
+                this.userReservations = [];
+                return;
+            }
+            
+            this.isLoadingReservations = true;
+            try {
+                const reservations = await ApiService.getMyReservations();
+                
+                // Transformar datos de la API al formato del frontend
+                this.userReservations = reservations.map(res => ({
+                    id: res.id,
+                    cancha: res.court.name,
+                    deporte: res.court.sport,
+                    fecha: res.date,
+                    hora: res.time,
+                    precio: res.total_price,
+                    estado: res.status === 'confirmed' ? 'Reservada' : 
+                            res.status === 'cancelled' ? 'Cancelada' : 'Completada',
+                    codigo: `RES-${String(res.id).padStart(5, '0')}`,
+                    ubicacion: {
+                        city: 'Viña del Mar',
+                        address: 'Av. Libertad 1348'
+                    }
+                }));
+                
+                console.log('Reservas del usuario cargadas desde API:', this.userReservations.length);
+            } catch (error) {
+                console.error('Error cargando reservas desde API:', error);
+                this.userReservations = [];
+            } finally {
+                this.isLoadingReservations = false;
+            }
+        },
+
+        // NUEVO: Cargar canchas desde la API
+        async loadCourtsFromAPI() {
+            try {
+                const allCourts = await ApiService.getCourts();
+                
+                // Transformar datos de la API al formato del frontend
+                const newCourtsData = {
+                    'Fútbol': [],
+                    'Tenis': [],
+                    'Pádel': []
+                };
+                
+                allCourts.forEach(court => {
+                    const courtData = {
+                        id: court.court_id,
+                        dbId: court.id, // ID de la base de datos para las reservas
+                        name: court.name,
+                        description: court.description,
+                        capacity: court.capacity,
+                        rating: court.rating,
+                        pricePerHour: court.price_per_hour,
+                        features: court.features ? JSON.parse(court.features) : [],
+                        available: court.is_active,
+                        location: {
+                            city: 'Viña del Mar',
+                            address: 'Av. Libertad 1348, Viña del Mar',
+                            lat: -33.0244,
+                            lon: -71.5519
+                        }
+                    };
+                    
+                    if (newCourtsData[court.sport]) {
+                        newCourtsData[court.sport].push(courtData);
+                    }
+                });
+                
+                // Actualizar datos de canchas
+                this.courtsData = newCourtsData;
+                
+                // Actualizar contador de canchas disponibles
+                this.sportsData.forEach(sport => {
+                    sport.available = this.courtsData[sport.name]?.length || 0;
+                });
+                
+                console.log('Canchas cargadas desde API');
+            } catch (error) {
+                console.error('Error cargando canchas desde API:', error);
+                // Mantener datos locales como fallback
             }
         },
 
@@ -395,85 +481,93 @@ const app = createApp({
         },
 
         // Authentication methods
-        handleLogin() {
-            // Simple validation - in real app, this would be an API call
-            if (this.loginForm.rut && this.loginForm.password) {
-                // Load users from localStorage
-                const usersData = localStorage.getItem('registeredUsers');
-                const users = usersData ? JSON.parse(usersData) : [];
+        async handleLogin() {
+            if (!this.loginForm.rut || !this.loginForm.password) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            try {
+                // Usar email directamente si contiene @, sino convertir RUT a email
+                const email = this.loginForm.rut.includes('@') ? this.loginForm.rut : `${this.loginForm.rut}@unab.cl`;
                 
-                // Find user by RUT and password
-                const foundUser = users.find(u => 
-                    u.rut === this.loginForm.rut && u.password === this.loginForm.password
-                );
+                // Login con el backend
+                await ApiService.login(email, this.loginForm.password);
                 
-                if (foundUser) {
-                    // User found, login successful
-                    this.user = {
-                        rut: foundUser.rut,
-                        nombre: foundUser.nombre,
-                        apellido: foundUser.apellido,
-                        email: foundUser.email
-                    };
-                    this.currentView = 'dashboard';
-                    this.loginForm = { rut: '', password: '' };
-                    console.log('Login exitoso:', `${this.user.nombre} ${this.user.apellido}`);
-                } else {
-                    // User not found or wrong password
-                    alert('RUT o contraseña incorrectos. Por favor, regístrate si no tienes cuenta.');
-                    console.log('Login fallido para RUT:', this.loginForm.rut);
-                }
+                // Obtener información del usuario
+                const userData = await ApiService.getCurrentUser();
+                
+                this.user = {
+                    email: userData.email,
+                    nombre: userData.full_name?.split(' ')[0] || 'Usuario',
+                    apellido: userData.full_name?.split(' ').slice(1).join(' ') || '',
+                    rut: this.loginForm.rut,
+                    isAdmin: userData.is_admin
+                };
+                
+                localStorage.setItem('currentUser', JSON.stringify(this.user));
+                this.currentView = 'dashboard';
+                this.loginForm = { rut: '', password: '' };
+                
+                // Cargar datos del usuario
+                await this.loadUserReservations();
+                await this.loadCourtsFromAPI();
+                
+                console.log('Login exitoso:', `${this.user.nombre} ${this.user.apellido}`);
+            } catch (error) {
+                console.error('Error en login:', error);
+                alert('Credenciales incorrectas. Intenta con:\n\nAdmin: admin@unab.cl / admin123\nUsuario: usuario@unab.cl / usuario123');
             }
         },
         
-        handleRegister() {
-            // Simple validation - in real app, this would be an API call
-            if (this.registerForm.nombre && this.registerForm.apellido && 
-                this.registerForm.rut && this.registerForm.email && this.registerForm.password) {
+        async handleRegister() {
+            const form = this.registerForm;
+            
+            if (!form.nombre || !form.apellido || !form.rut || !form.email || !form.password) {
+                alert('Por favor completa todos los campos');
+                return;
+            }
+            
+            if (form.password.length < 6) {
+                alert('La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+            
+            try {
+                // Registrar en el backend
+                await ApiService.register({
+                    email: form.email,
+                    password: form.password,
+                    full_name: `${form.nombre} ${form.apellido}`
+                });
                 
-                // Load existing users
-                const usersData = localStorage.getItem('registeredUsers');
-                const users = usersData ? JSON.parse(usersData) : [];
-                
-                // Check if RUT already exists
-                const existingUser = users.find(u => u.rut === this.registerForm.rut);
-                if (existingUser) {
-                    alert('Este RUT ya está registrado. Por favor, inicia sesión.');
-                    return;
-                }
-                
-                // Create new user
-                const newUser = {
-                    rut: this.registerForm.rut,
-                    nombre: this.registerForm.nombre,
-                    apellido: this.registerForm.apellido,
-                    email: this.registerForm.email,
-                    password: this.registerForm.password
+                alert('¡Registro exitoso! Ahora puedes iniciar sesión');
+                this.activeAuthTab = 'login';
+                this.loginForm.rut = form.email; // Pre-llenar el email en el login
+                this.registerForm = {
+                    nombre: '',
+                    apellido: '',
+                    rut: '',
+                    email: '',
+                    password: ''
                 };
                 
-                // Save to localStorage
-                users.push(newUser);
-                localStorage.setItem('registeredUsers', JSON.stringify(users));
-                
-                // Login the user
-                this.user = {
-                    rut: newUser.rut,
-                    nombre: newUser.nombre,
-                    apellido: newUser.apellido,
-                    email: newUser.email
-                };
-                
-                this.currentView = 'dashboard';
-                this.registerForm = { nombre: '', apellido: '', rut: '', email: '', password: '' };
-                console.log('Registro exitoso:', `${this.user.nombre} ${this.user.apellido}`);
+                console.log('Registro exitoso para:', form.email);
+            } catch (error) {
+                console.error('Error en registro:', error);
+                alert('Error al registrar: ' + error.message);
             }
         },
         
         logout() {
+            ApiService.logout();
             this.user = null;
             this.currentView = 'auth';
             this.activeAuthTab = 'login';
+            this.userReservations = [];
+            localStorage.removeItem('currentUser');
             this.resetSelection();
+            console.log('Sesión cerrada');
         },
         
         // Navigation methods
@@ -549,69 +643,65 @@ const app = createApp({
             this.showConfirm = false;
         },
         
-        confirmReservation() {
-            // Verificar si estamos modificando una reserva existente
-            if (this.modifyingReservation) {
-                // Modificar reserva existente
-                const reservationIndex = this.reservations.findIndex(r => r.id === this.modifyingReservation.id);
-                if (reservationIndex !== -1) {
-                    // Actualizar fecha y hora
-                    this.reservations[reservationIndex].fecha = this.selectedDate;
-                    this.reservations[reservationIndex].hora = this.selectedTime;
-                    this.reservations[reservationIndex].estado = 'Reservada';
-                    
-                    // Set as last reservation for success page
-                    this.lastReservation = this.reservations[reservationIndex];
-                    
-                    console.log('🔄 Reserva modificada exitosamente:', this.lastReservation.codigo);
-                }
-                
-                // Limpiar la referencia de modificación
-                this.modifyingReservation = null;
-            } else {
-                // Crear nueva reserva
-                const reservationId = 'R' + String(Date.now()).slice(-6);
-                const reservationCode = this.generateReservationCode();
-                
-                const newReservation = {
-                    id: reservationId,
-                    codigo: reservationCode,
-                    usuario: `${this.user.nombre} ${this.user.apellido}`,
-                    canchaId: this.selectedCourt.id,
-                    cancha: this.selectedCourt.name,
-                    deporte: this.selectedSport,
-                    fecha: this.selectedDate,
-                    hora: this.selectedTime,
-                    precio: this.selectedCourt.pricePerHour,
-                    estado: 'Reservada',
-                    ubicacion: this.selectedCourt.location ? {
-                        city: this.selectedCourt.location.city,
-                        address: this.selectedCourt.location.address
-                    } : null
-                };
-                
-                // Add the new reservation to the array
-                this.reservations.push(newReservation);
-                
-                // Set as last reservation for success page
-                this.lastReservation = newReservation;
-                
-                console.log('✅ Reserva creada exitosamente:', newReservation.codigo);
+        async confirmReservation() {
+            if (!this.selectedDate || !this.selectedTime || !this.selectedCourt) {
+                alert('Por favor selecciona fecha y hora');
+                return;
             }
             
-            // Explicitly save to localStorage
-            localStorage.setItem('courtReservations', JSON.stringify(this.reservations));
-            
-            // Log for debugging
-            console.log('📊 Total de reservas en sistema:', this.reservations.length);
-            console.log('👤 Usuario actual:', `${this.user.nombre} ${this.user.apellido}`);
-            console.log('🎯 Reservas filtradas del usuario:', this.userReservations.length);
-            
-            // Force reactivity update
-            this.$forceUpdate();
-            
-            this.hideConfirmDialog();
-            this.currentView = 'success';
+            try {
+                const reservationData = {
+                    court_id: this.selectedCourt.dbId || this.selectedCourt.id,
+                    date: this.selectedDate,
+                    time: this.selectedTime,
+                    duration: 1,
+                    notes: ''
+                };
+                
+                if (this.modifyingReservation) {
+                    // Actualizar reserva existente
+                    await ApiService.updateReservation(this.modifyingReservation.id, {
+                        date: this.selectedDate,
+                        time: this.selectedTime
+                    });
+                    
+                    console.log('🔄 Reserva modificada exitosamente');
+                    alert('Reserva modificada exitosamente');
+                    
+                    this.modifyingReservation = null;
+                    this.hideConfirmDialog();
+                    this.backToDashboard();
+                    this.activeDashboardTab = 'reservations';
+                    
+                    // Recargar reservas
+                    await this.loadUserReservations();
+                } else {
+                    // Crear nueva reserva
+                    const newReservation = await ApiService.createReservation(reservationData);
+                    
+                    this.lastReservation = {
+                        id: newReservation.id,
+                        cancha: this.selectedCourt.name,
+                        deporte: this.selectedSport,
+                        fecha: this.selectedDate,
+                        hora: this.selectedTime,
+                        precio: this.selectedCourt.pricePerHour,
+                        codigo: `RES-${String(newReservation.id).padStart(5, '0')}`,
+                        ubicacion: this.selectedCourt.location
+                    };
+                    
+                    console.log('✅ Reserva creada exitosamente:', this.lastReservation.codigo);
+                    
+                    this.hideConfirmDialog();
+                    this.currentView = 'success';
+                    
+                    // Recargar reservas
+                    await this.loadUserReservations();
+                }
+            } catch (error) {
+                console.error('Error creando/modificando reserva:', error);
+                alert('Error al procesar la reserva: ' + error.message);
+            }
         },
         
         generateReservationCode() {
@@ -643,17 +733,24 @@ const app = createApp({
             this.showCancel = false;
         },
         
-        confirmCancelReservation() {
-            if (this.selectedReservation) {
-                // Cambiar el estado a "Cancelada" en lugar de eliminar
-                const reservationIndex = this.reservations.findIndex(r => r.id === this.selectedReservation.id);
-                if (reservationIndex !== -1) {
-                    this.reservations[reservationIndex].estado = 'Cancelada';
-                    console.log('✅ Reserva cancelada:', this.reservations[reservationIndex].codigo);
-                }
+        async confirmCancelReservation() {
+            if (!this.selectedReservation) return;
+            
+            try {
+                await ApiService.cancelReservation(this.selectedReservation.id);
+                
+                console.log('✅ Reserva cancelada:', this.selectedReservation.codigo);
+                alert('Reserva cancelada exitosamente');
+                
                 this.selectedReservation = null;
+                this.hideCancelDialog();
+                
+                // Recargar reservas
+                await this.loadUserReservations();
+            } catch (error) {
+                console.error('Error cancelando reserva:', error);
+                alert('Error al cancelar la reserva: ' + error.message);
             }
-            this.hideCancelDialog();
         },
         
         changeReservationTime() {
@@ -714,46 +811,9 @@ const app = createApp({
             });
         },
 
-        // Method to reload reservations from JSON file
+        // Method to reload reservations from API
         async reloadReservations() {
-            this.isLoadingReservations = true;
-            
-            // First, try to get from localStorage
-            const savedReservations = localStorage.getItem('courtReservations');
-            if (savedReservations) {
-                this.reservations = JSON.parse(savedReservations);
-                console.log('Reservas recargadas desde localStorage:', this.reservations.length);
-                this.isLoadingReservations = false;
-                return;
-            }
-            
-            // If no localStorage, try JSON file
-            try {
-                const response = await fetch('./reservas.json');
-                if (response.ok) {
-                    const reservationsData = await response.json();
-                    // Transform the data to match the expected format
-                    this.reservations = reservationsData.map(reservation => ({
-                        id: reservation.id,
-                        usuario: reservation.usuario,
-                        cancha: this.getCourtNameById(reservation.canchaId),
-                        deporte: this.getSportByCourtId(reservation.canchaId),
-                        fecha: reservation.fecha,
-                        hora: reservation.hora,
-                        estado: reservation.estado,
-                        codigo: reservation.id // Use ID as code for now
-                    }));
-                    // Save to localStorage for future use
-                    localStorage.setItem('courtReservations', JSON.stringify(this.reservations));
-                    console.log('Reservas actualizadas desde el archivo JSON');
-                } else {
-                    console.error('No se pudo cargar el archivo de reservas');
-                }
-            } catch (error) {
-                console.error('Error al recargar las reservas:', error);
-            } finally {
-                this.isLoadingReservations = false;
-            }
+            await this.loadUserReservations();
         },
         
         newReservation() {
@@ -1066,7 +1126,7 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
         }
     },
     
-    mounted() {
+    async mounted() {
         // Initialize Lucide icons
         if (typeof lucide !== 'undefined') {
             this.$nextTick(() => {
@@ -1074,15 +1134,39 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
             });
         }
         
-        // Load existing reservations from localStorage or JSON file
+        // Verificar si hay sesión activa
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser && ApiService.isAuthenticated()) {
+            try {
+                this.user = JSON.parse(savedUser);
+                this.currentView = 'dashboard';
+                
+                // Cargar datos del usuario
+                await this.loadUserReservations();
+                await this.loadCourtsFromAPI();
+                
+                console.log('Sesión restaurada:', `${this.user.nombre} ${this.user.apellido}`);
+            } catch (error) {
+                console.error('Error restaurando sesión:', error);
+                // Si hay error, limpiar sesión
+                ApiService.logout();
+                localStorage.removeItem('currentUser');
+                this.user = null;
+                this.currentView = 'auth';
+            }
+        } else {
+            // No hay sesión, mostrar login
+            this.currentView = 'auth';
+        }
+        
+        // Load existing reservations from localStorage as fallback
         this.loadReservations();
         
         // Load weather data
         this.fetchWeatherData();
         
         // Log initial state
-        console.log('App montada. Reservas en localStorage:', localStorage.getItem('courtReservations'));
-        console.log('Usuarios registrados:', localStorage.getItem('registeredUsers'));
+        console.log('App montada. Modo:', ApiService.isAuthenticated() ? 'Autenticado' : 'No autenticado');
     },
     
     watch: {
