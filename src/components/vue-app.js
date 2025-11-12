@@ -211,6 +211,7 @@ const app = createApp({
             
             // Reservations
             reservations: [],
+            userReservations: [], // Reservas del usuario desde la API
             selectedReservation: null,
             lastReservation: null,
             modifyingReservation: null,
@@ -239,21 +240,24 @@ const app = createApp({
     },
     
     computed: {
-        // Filter reservations for current user only
-        userReservations() {
+        // Get user reservations - from API if authenticated, otherwise filter local reservations
+        filteredUserReservations() {
+            // Si hay reservas de la API (usuario autenticado), usarlas
+            if (ApiService.isAuthenticated() && this.userReservations.length > 0) {
+                console.log(`✅ Usando reservas de la API: ${this.userReservations.length} reservas`);
+                return this.userReservations;
+            }
+            
+            // Fallback: filtrar reservas locales por nombre de usuario
             if (!this.user) {
-                console.log('⚠️ userReservations: No hay usuario logueado');
+                console.log('⚠️ No hay usuario logueado');
                 return [];
             }
             const userFullName = `${this.user.nombre} ${this.user.apellido}`;
             const filtered = this.reservations.filter(reservation => {
-                const match = reservation.usuario === userFullName;
-                if (!match) {
-                    console.log(`🔍 Filtrando: "${reservation.usuario}" !== "${userFullName}"`);
-                }
-                return match;
+                return reservation.usuario === userFullName;
             });
-            console.log(`✅ userReservations calculado: ${filtered.length} reservas para "${userFullName}"`);
+            console.log(`✅ Usando reservas locales: ${filtered.length} reservas para "${userFullName}"`);
             return filtered;
         },
         calendarDays() {
@@ -377,13 +381,16 @@ const app = createApp({
         // NUEVO: Cargar reservas del usuario desde la API
         async loadUserReservations() {
             if (!ApiService.isAuthenticated()) {
+                console.log('⚠️ loadUserReservations: Usuario no autenticado');
                 this.userReservations = [];
                 return;
             }
             
             this.isLoadingReservations = true;
+            console.log('🔄 Cargando reservas del usuario desde la API...');
             try {
                 const reservations = await ApiService.getMyReservations();
+                console.log('📥 Reservas recibidas de la API:', reservations);
                 
                 // Transformar datos de la API al formato del frontend
                 this.userReservations = reservations.map(res => ({
@@ -402,9 +409,10 @@ const app = createApp({
                     }
                 }));
                 
-                console.log('Reservas del usuario cargadas desde API:', this.userReservations.length);
+                console.log('✅ Reservas del usuario cargadas desde API:', this.userReservations.length);
+                console.log('📋 Reservas transformadas:', this.userReservations);
             } catch (error) {
-                console.error('Error cargando reservas desde API:', error);
+                console.error('❌ Error cargando reservas desde API:', error);
                 this.userReservations = [];
             } finally {
                 this.isLoadingReservations = false;

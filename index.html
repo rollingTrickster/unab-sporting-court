@@ -183,7 +183,7 @@
                     >
                         <i data-lucide="calendar"></i>
                         Mis Reservas
-                        <span v-if="userReservations.length > 0" class="reservation-count">({{ userReservations.length }})</span>
+                        <span v-if="filteredUserReservations.length > 0" class="reservation-count">({{ filteredUserReservations.length }})</span>
                     </button>
                 </div>
 
@@ -237,7 +237,7 @@
                         </div>
                     </div>
                     <div class="reservations-content">
-                        <div v-if="userReservations.length === 0" class="empty-state">
+                        <div v-if="filteredUserReservations.length === 0" class="empty-state">
                             <div class="empty-icon">📅</div>
                             <h3>No tienes reservas</h3>
                             <p>Cuando hagas una reserva, aparecerá aquí</p>
@@ -245,7 +245,7 @@
                         
                         <div v-else class="reservations-list">
                             <div 
-                                v-for="reservation in userReservations" 
+                                v-for="reservation in filteredUserReservations" 
                                 :key="reservation.id"
                                 class="reservation-card"
                                 :class="{ 
