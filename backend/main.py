@@ -247,6 +247,30 @@ async def get_court(court_id: int, db: Session = Depends(get_db)):
     return court
 
 
+@app.get("/api/v1/courts/{court_id}/availability", response_model=List[schemas.Reservation], tags=["Canchas"])
+async def get_court_availability(
+    court_id: int,
+    date: str = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener las reservas de una cancha para verificar disponibilidad (no requiere autenticación)
+    
+    - **court_id**: ID de la cancha
+    - **date**: Fecha en formato YYYY-MM-DD (opcional)
+    """
+    query = db.query(models.Reservation).filter(
+        models.Reservation.court_id == court_id,
+        models.Reservation.status == "confirmed"
+    )
+    
+    if date:
+        query = query.filter(models.Reservation.date == date)
+    
+    reservations = query.all()
+    return reservations
+
+
 # ============ Reservation Endpoints ============
 @app.post("/api/v1/reservations", response_model=schemas.Reservation, status_code=status.HTTP_201_CREATED, tags=["Reservas"])
 async def create_reservation(

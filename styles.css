@@ -859,7 +859,7 @@ label {
     transition: all 0.15s ease;
 }
 
-.time-slot:hover:not(.disabled) {
+.time-slot:hover:not(.disabled):not(.past) {
     background-color: var(--primary);
     color: var(--primary-foreground);
 }
@@ -877,6 +877,29 @@ label {
     background-color: #f8f9fa !important;
     transform: none !important;
     box-shadow: none !important;
+}
+
+/* Estilo para horarios pasados */
+.time-slot.past {
+    cursor: not-allowed;
+    opacity: 0.5;
+    background-color: #e9ecef !important;
+    color: #868e96 !important;
+    border-color: #ced4da !important;
+    text-decoration: line-through;
+}
+
+.time-slot.past:hover {
+    background-color: #e9ecef !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.slot-past-label {
+    font-size: 0.7rem;
+    color: #dc3545;
+    font-weight: 500;
+    margin-top: 0.25rem;
 }
 
 .time-slot .time {
@@ -1422,6 +1445,114 @@ label {
     .modal-content {
         width: 95%;
         margin: 1rem;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    /* Mejorar auth card en móvil */
+    .auth-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    /* Mejorar tabs en móvil */
+    .auth-tabs {
+        gap: 0.5rem;
+    }
+    
+    .tab-button {
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    /* Mejorar dashboard en móvil */
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Mejorar cards de deportes en móvil */
+    .sport-card, .court-card {
+        padding: 1.25rem;
+    }
+    
+    /* Mejorar calendario en móvil */
+    .calendar-header {
+        padding: 0.75rem;
+    }
+    
+    .calendar-day {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Mejorar horarios en móvil */
+    .time-slots {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 0.5rem;
+    }
+    
+    .time-slot {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Mejorar botones en móvil */
+    .btn {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+    }
+    
+    /* Mejorar success view en móvil */
+    .success-card {
+        padding: 1.5rem;
+        margin: 1rem;
+    }
+    
+    .success-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .success-actions .btn {
+        width: 100%;
+    }
+}
+
+/* Media query adicional para pantallas muy pequeñas */
+@media (max-width: 480px) {
+    .header-content h1 {
+        font-size: 1.25rem;
+    }
+    
+    .modal-content {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        padding: 1rem;
+    }
+    
+    .calendar-weekday {
+        font-size: 0.75rem;
+        padding: 0.25rem;
+    }
+    
+    .calendar-day {
+        height: 40px;
+        font-size: 0.75rem;
+    }
+    
+    .time-slots {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.25rem;
     }
 }
 

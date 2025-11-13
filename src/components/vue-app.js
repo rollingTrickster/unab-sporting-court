@@ -212,6 +212,7 @@ const app = createApp({
             // Reservations
             reservations: [],
             userReservations: [], // Reservas del usuario desde la API
+            allReservations: [], // Todas las reservas del sistema (para verificar disponibilidad)
             selectedReservation: null,
             lastReservation: null,
             modifyingReservation: null,
@@ -317,7 +318,7 @@ const app = createApp({
         },
         
         availableTimeSlots() {
-            if (!this.selectedDate) return [];
+            if (!this.selectedDate || !this.selectedCourt) return [];
             
             const slots = [
                 '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
@@ -325,13 +326,37 @@ const app = createApp({
                 '20:00', '21:00', '22:00'
             ];
             
+            // ID de la cancha seleccionada
+            const currentCourtId = this.selectedCourt?.dbId || this.selectedCourt?.id;
+            
             // Check for occupied slots based on existing reservations
             return slots.map(time => {
-                const occupied = this.reservations.some(reservation => 
+                // Verificar en reservas locales (fallback)
+                const occupiedLocal = this.reservations.some(reservation => 
                     reservation.fecha === this.selectedDate && 
                     reservation.hora === time &&
-                    reservation.canchaId === this.selectedCourt?.id
+                    (reservation.canchaId === currentCourtId || reservation.canchaId === this.selectedCourt?.id) &&
+                    reservation.estado !== 'Cancelada'
                 );
+                
+                // Verificar en TODAS las reservas del usuario (no solo las propias)
+                // Esto incluye reservas que puedan estar en memoria de otras sesiones
+                const occupiedAPI = this.userReservations.some(reservation => 
+                    reservation.fecha === this.selectedDate && 
+                    reservation.hora === time &&
+                    reservation.court_id === currentCourtId &&
+                    reservation.estado !== 'Cancelada'
+                );
+                
+                // Verificar en todas las reservas del sistema si están cargadas
+                const occupiedAll = this.allReservations.some(reservation => 
+                    reservation.fecha === this.selectedDate && 
+                    reservation.hora === time &&
+                    reservation.court_id === currentCourtId &&
+                    reservation.estado !== 'Cancelada'
+                );
+                
+                const occupied = occupiedLocal || occupiedAPI || occupiedAll;
                 
                 return { time, occupied };
             });
@@ -395,6 +420,7 @@ const app = createApp({
                 // Transformar datos de la API al formato del frontend
                 this.userReservations = reservations.map(res => ({
                     id: res.id,
+                    court_id: res.court.id, // Agregar el ID de la cancha
                     cancha: res.court.name,
                     deporte: res.court.sport,
                     fecha: res.date,
@@ -411,6 +437,14 @@ const app = createApp({
                 
                 console.log('✅ Reservas del usuario cargadas desde API:', this.userReservations.length);
                 console.log('📋 Reservas transformadas:', this.userReservations);
+                
+                // Re-inicializar iconos de Lucide después de cargar reservas
+                this.$nextTick(() => {
+                    if (typeof lucide !== 'undefined') {
+                        lucide.createIcons();
+                        console.log('🎨 Iconos Lucide re-inicializados después de cargar reservas');
+                    }
+                });
             } catch (error) {
                 console.error('❌ Error cargando reservas desde API:', error);
                 this.userReservations = [];
@@ -591,7 +625,36 @@ const app = createApp({
             // Cargar clima específico de la ubicación de la cancha
             await this.fetchWeatherForCourt(court);
             
+            // Cargar reservas de esta cancha para verificar disponibilidad
+            await this.loadCourtReservations(court);
+            
             this.currentView = 'calendar';
+        },
+        
+        // Cargar reservas de una cancha específica
+        async loadCourtReservations(court) {
+            try {
+                const courtId = court.dbId || court.id;
+                console.log(`🔍 Cargando reservas de la cancha ID: ${courtId}`);
+                
+                // Obtener reservas de esta cancha
+                const reservations = await ApiService.getCourtAvailability(courtId);
+                
+                // Transformar y almacenar en allReservations
+                this.allReservations = reservations.map(res => ({
+                    id: res.id,
+                    court_id: res.court_id,
+                    fecha: res.date,
+                    hora: res.time,
+                    estado: res.status === 'confirmed' ? 'Reservada' : 
+                            res.status === 'cancelled' ? 'Cancelada' : 'Completada'
+                }));
+                
+                console.log(`✅ ${this.allReservations.length} reservas cargadas para esta cancha`);
+            } catch (error) {
+                console.error('Error cargando reservas de la cancha:', error);
+                this.allReservations = [];
+            }
         },
         
         backToDashboard() {
@@ -639,7 +702,22 @@ const app = createApp({
         },
         
         selectTimeSlot(time) {
+            // Validar que no se pueda seleccionar un horario pasado
+            if (this.isTimeSlotPast(time)) {
+                alert('No puedes reservar un horario que ya pasó. Por favor, selecciona un horario futuro.');
+                return;
+            }
             this.selectedTime = time;
+        },
+        
+        // Método auxiliar para verificar si un horario ya pasó
+        isTimeSlotPast(time) {
+            if (!this.selectedDate) return false;
+            
+            const now = new Date();
+            const selectedDateTime = new Date(`${this.selectedDate}T${time}:00`);
+            
+            return selectedDateTime < now;
         },
         
         // Reservation methods
@@ -654,6 +732,12 @@ const app = createApp({
         async confirmReservation() {
             if (!this.selectedDate || !this.selectedTime || !this.selectedCourt) {
                 alert('Por favor selecciona fecha y hora');
+                return;
+            }
+            
+            // Validar que no sea un horario pasado
+            if (this.isTimeSlotPast(this.selectedTime)) {
+                alert('No puedes reservar un horario que ya pasó. Por favor, selecciona un horario futuro.');
                 return;
             }
             
@@ -708,7 +792,20 @@ const app = createApp({
                 }
             } catch (error) {
                 console.error('Error creando/modificando reserva:', error);
-                alert('Error al procesar la reserva: ' + error.message);
+                
+                // Mejorar el mensaje de error para casos específicos
+                let errorMessage = 'Error al procesar la reserva';
+                
+                if (error.message.includes('ya está reservada') || error.message.includes('already')) {
+                    errorMessage = '⚠️ Esta cancha ya está reservada en ese horario. Por favor, selecciona otro horario.';
+                } else if (error.message.includes('disponibilidad') || error.message.includes('available')) {
+                    errorMessage = '⚠️ El horario seleccionado no está disponible. Por favor, elige otro.';
+                } else {
+                    errorMessage = `Error: ${error.message}`;
+                }
+                
+                alert(errorMessage);
+                this.hideConfirmDialog();
             }
         },
         
@@ -769,8 +866,23 @@ const app = createApp({
             
             // Find the court and sport
             this.selectedSport = this.selectedReservation.deporte;
-            this.selectedCourt = this.getAvailableCourts(this.selectedSport)
-                .find(court => court.id === this.selectedReservation.canchaId);
+            
+            // Buscar la cancha en courtsData usando el court_id
+            const availableCourts = this.getAvailableCourts(this.selectedSport);
+            this.selectedCourt = availableCourts.find(court => 
+                court.dbId === this.selectedReservation.court_id || 
+                court.id === this.selectedReservation.court_id
+            );
+            
+            // Si no se encuentra, intentar buscar por nombre como fallback
+            if (!this.selectedCourt) {
+                this.selectedCourt = availableCourts.find(court => 
+                    court.name === this.selectedReservation.cancha
+                );
+            }
+            
+            console.log('🔍 Cancha seleccionada:', this.selectedCourt);
+            console.log('📋 Reserva a modificar:', this.modifyingReservation);
             
             // Pre-seleccionar la fecha actual
             this.selectedDate = this.selectedReservation.fecha;
@@ -831,25 +943,102 @@ const app = createApp({
         },
         
         downloadReservation() {
-            // Simple download functionality
-            const content = `
-Reserva de Cancha
-=================
-Código: ${this.lastReservation.codigo}
-Cancha: ${this.lastReservation.cancha}
-Deporte: ${this.lastReservation.deporte}
-Fecha: ${this.formatDate(this.lastReservation.fecha)}
-Hora: ${this.lastReservation.hora}
-Total: $${this.formatPrice(this.lastReservation.precio)}
-            `;
-            
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `reserva-${this.lastReservation.codigo}.txt`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+            try {
+                // Crear una instancia de jsPDF
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Configurar fuente y colores
+                doc.setFont("helvetica");
+                
+                // Título principal
+                doc.setFontSize(22);
+                doc.setTextColor(3, 2, 19); // Color primario
+                doc.text("COMPROBANTE DE RESERVA", 105, 20, { align: "center" });
+                
+                // Línea decorativa
+                doc.setDrawColor(3, 2, 19);
+                doc.setLineWidth(0.5);
+                doc.line(20, 25, 190, 25);
+                
+                // Información de la reserva
+                doc.setFontSize(12);
+                doc.setTextColor(0, 0, 0);
+                
+                let yPos = 40;
+                const lineHeight = 10;
+                
+                // Código de reserva (destacado)
+                doc.setFontSize(14);
+                doc.setFont("helvetica", "bold");
+                doc.text("Código de Reserva:", 20, yPos);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(34, 197, 94); // Verde
+                doc.text(this.lastReservation.codigo, 80, yPos);
+                
+                yPos += lineHeight + 5;
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(12);
+                
+                // Detalles de la reserva
+                const details = [
+                    { label: "Deporte:", value: this.lastReservation.deporte },
+                    { label: "Cancha:", value: this.lastReservation.cancha },
+                    { label: "Fecha:", value: this.formatDate(this.lastReservation.fecha) },
+                    { label: "Hora:", value: this.lastReservation.hora },
+                    { label: "Duración:", value: "1 hora" },
+                    { label: "Precio Total:", value: `$${this.formatPrice(this.lastReservation.precio)}` }
+                ];
+                
+                details.forEach(detail => {
+                    doc.setFont("helvetica", "bold");
+                    doc.text(detail.label, 20, yPos);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(detail.value, 80, yPos);
+                    yPos += lineHeight;
+                });
+                
+                // Línea divisoria
+                yPos += 5;
+                doc.setDrawColor(200, 200, 200);
+                doc.line(20, yPos, 190, yPos);
+                yPos += 10;
+                
+                // Instrucciones
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                doc.text("INSTRUCCIONES IMPORTANTES:", 20, yPos);
+                yPos += lineHeight;
+                
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(10);
+                const instructions = [
+                    "• Llega 10 minutos antes de tu hora reservada",
+                    "• Presenta este comprobante en la recepción",
+                    "• Trae tu documento de identidad",
+                    "• El retraso máximo permitido es de 15 minutos"
+                ];
+                
+                instructions.forEach(instruction => {
+                    doc.text(instruction, 25, yPos);
+                    yPos += 7;
+                });
+                
+                // Footer
+                yPos = 270;
+                doc.setFontSize(9);
+                doc.setTextColor(100, 100, 100);
+                doc.text("UNAB Sporting Court - Sistema de Reservas", 105, yPos, { align: "center" });
+                doc.text(`Generado el ${new Date().toLocaleDateString('es-CL')} a las ${new Date().toLocaleTimeString('es-CL')}`, 105, yPos + 5, { align: "center" });
+                
+                // Guardar el PDF
+                doc.save(`reserva-${this.lastReservation.codigo}.pdf`);
+                
+                console.log('✅ PDF generado exitosamente');
+            } catch (error) {
+                console.error('❌ Error generando PDF:', error);
+                alert('Error al generar el PDF. Por favor, intenta nuevamente.');
+            }
         },
         
         shareReservation() {
@@ -1204,6 +1393,24 @@ Total: $${this.formatPrice(this.lastReservation.precio)}
         
         // Re-initialize Lucide icons when view changes
         currentView() {
+            this.$nextTick(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            });
+        },
+        
+        // Re-initialize Lucide icons when dashboard tab changes
+        activeDashboardTab() {
+            this.$nextTick(() => {
+                if (typeof lucide !== 'undefined') {
+                    lucide.createIcons();
+                }
+            });
+        },
+        
+        // Re-initialize Lucide icons when reservations are loaded
+        userReservations() {
             this.$nextTick(() => {
                 if (typeof lucide !== 'undefined') {
                     lucide.createIcons();

@@ -150,6 +150,21 @@
             return handleResponse(response);
         },
 
+        /**
+         * Obtener disponibilidad de una cancha (reservas existentes)
+         * @param {number} courtId - ID de la cancha
+         * @param {string} date - Fecha en formato YYYY-MM-DD (opcional)
+         * @returns {Promise<Array>} Lista de reservas de la cancha
+         */
+        async getCourtAvailability(courtId, date = null) {
+            let url = `${API_BASE_URL}${API_VERSION}/courts/${courtId}/availability`;
+            if (date) {
+                url += `?date=${date}`;
+            }
+            const response = await fetch(url);
+            return handleResponse(response);
+        },
+
         // ============================================
         // RESERVAS
         // ============================================
