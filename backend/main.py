@@ -48,7 +48,12 @@ app = FastAPI(
 )
 
 # Configurar CORS
-origins = json.loads(os.getenv("CORS_ORIGINS", '["*"]'))
+cors_origins_str = os.getenv("CORS_ORIGINS", '["*"]')
+try:
+    origins = json.loads(cors_origins_str)
+except json.JSONDecodeError:
+    # Si falla el parsing, usar como lista separada por comas
+    origins = [origin.strip() for origin in cors_origins_str.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
