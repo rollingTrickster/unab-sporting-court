@@ -26,7 +26,20 @@
     const handleResponse = async (response) => {
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ detail: 'Error desconocido' }));
-            throw new Error(errorData.detail || `Error ${response.status}`);
+            
+            // Manejar errores de validación (422)
+            if (response.status === 422 && errorData.detail && Array.isArray(errorData.detail)) {
+                const validationErrors = errorData.detail.map(err => 
+                    `${err.loc.join('.')}: ${err.msg}`
+                ).join(', ');
+                throw new Error(`Error de validación: ${validationErrors}`);
+            }
+            
+            // Manejar otros errores
+            const errorMessage = typeof errorData.detail === 'string' 
+                ? errorData.detail 
+                : errorData.message || `Error ${response.status}`;
+            throw new Error(errorMessage);
         }
         return response.json();
     };
@@ -39,7 +52,7 @@
         
         /**
          * Registrar un nuevo usuario
-         * @param {Object} userData - {email, password, full_name}
+         * @param {Object} userData - {rut, email, password, full_name}
          * @returns {Promise<Object>} Usuario creado
          */
         async register(userData) {
@@ -47,6 +60,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    rut: userData.rut,
                     email: userData.email,
                     password: userData.password,
                     full_name: userData.full_name || `${userData.nombre || ''} ${userData.apellido || ''}`.trim()

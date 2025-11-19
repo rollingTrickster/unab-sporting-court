@@ -8,6 +8,7 @@ from typing import Optional, List
 
 # ============ User Schemas ============
 class UserBase(BaseModel):
+    rut: str
     email: EmailStr
     full_name: Optional[str] = None
 

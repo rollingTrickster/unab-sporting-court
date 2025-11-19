@@ -83,13 +83,24 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     """
     Registrar un nuevo usuario
     
+    - **rut**: RUT único del usuario
     - **email**: Email único del usuario
     - **password**: Contraseña (mínimo 6 caracteres)
     - **full_name**: Nombre completo (opcional)
     """
-    # Verificar si el usuario ya existe
-    db_user = db.query(models.User).filter(models.User.email == user.email).first()
+    print(f"📝 Datos recibidos - RUT: {user.rut}, Email: {user.email}, Full Name: {user.full_name}")
+    
+    # Verificar si el usuario ya existe (por RUT)
+    db_user = db.query(models.User).filter(models.User.rut == user.rut).first()
     if db_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El RUT ya está registrado"
+        )
+    
+    # Verificar si el email ya existe
+    db_user_email = db.query(models.User).filter(models.User.email == user.email).first()
+    if db_user_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="El email ya está registrado"
@@ -98,6 +109,7 @@ def register(user: schemas.UserCreate, db: Session = Depends(get_db)):
     # Crear nuevo usuario con contraseña encriptada
     hashed_password = auth.get_password_hash(user.password)
     db_user = models.User(
+        rut=user.rut,
         email=user.email,
         hashed_password=hashed_password,
         full_name=user.full_name

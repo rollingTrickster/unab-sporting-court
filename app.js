@@ -1601,10 +1601,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('register-form').addEventListener('submit', handleRegister);
     
     // RUT formatting
-    document.getElementById('login-rut').addEventListener('input', function(e) {
-        e.target.value = formatRut(e.target.value);
-    });
-    
+    // RUT formatting solo para registro
     document.getElementById('register-rut').addEventListener('input', function(e) {
         e.target.value = formatRut(e.target.value);
     });

@@ -49,7 +49,7 @@
                             <div v-if="activeAuthTab === 'login'" class="tab-content active">
                                 <form @submit.prevent="handleLogin" class="auth-form">
                                     <div class="form-group">
-                                        <label for="login-rut">Correo electronico</label>
+                                        <label for="login-rut">Correo Electrónico</label>
                                         <input 
                                             type="email" 
                                             id="login-rut" 
@@ -104,12 +104,12 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="register-rut">MAIL</label>
+                                        <label for="register-rut">RUT</label>
                                         <input 
-                                            type="email" 
+                                            type="text" 
                                             id="register-rut" 
                                             v-model="registerForm.rut"
-                                            placeholder="ejemplo@mail.cl" 
+                                            placeholder="Ej: 12.345.678-9" 
                                             required 
                                             class="form-input"
                                         >
@@ -716,7 +716,7 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <script src="src/services/api.js?v=19.0"></script>
-    <script src="src/components/vue-app.js?v=19.0"></script>
+    <script src="src/services/api.js?v=20.0"></script>
+    <script src="src/components/vue-app.js?v=20.0"></script>
 </body>
 </html>
