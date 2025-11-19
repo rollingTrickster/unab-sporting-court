@@ -1,0 +1,57 @@
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: unab-sporting-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sporting_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sporting_password}
+      POSTGRES_DB: ${POSTGRES_DB:-sporting_court_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - sporting-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sporting_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend FastAPI (usando imagen de Docker Hub)
+  backend:
+    image: doriajacke/unab-sporting-backend:latest
+    container_name: unab-sporting-backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-sporting_user}:${POSTGRES_PASSWORD:-sporting_password}@db:5432/${POSTGRES_DB:-sporting_court_db}
+      SECRET_KEY: ${SECRET_KEY:-your-super-secret-key-change-in-production}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:8080","http://localhost:3000","http://127.0.0.1:8080"]}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - sporting-network
+
+  # Frontend (usando imagen de Docker Hub)
+  frontend:
+    image: doriajacke/unab-sporting-frontend:latest
+    container_name: unab-sporting-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    networks:
+      - sporting-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  sporting-network:
+    driver: bridge
