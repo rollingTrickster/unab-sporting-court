@@ -10,7 +10,6 @@ erDiagram
     USER {
         int id PK
         string email UK
-        string rut UK
         string hashed_password
         string full_name
         boolean is_active
@@ -55,7 +54,6 @@ classDiagram
     class User {
         +int id
         +string email
-        +string rut
         +string hashed_password
         +string full_name
         +boolean is_active
@@ -128,7 +126,6 @@ classDiagram
 
 ### User
 - `email`: UNIQUE INDEX
-- `rut`: UNIQUE INDEX
 - `id`: PRIMARY KEY
 
 ### Court
@@ -143,7 +140,7 @@ classDiagram
 ## Validaciones (Pydantic)
 
 ### UserCreate
-- `rut`: string, normalizado (sin puntos, con guión antes del dígito verificador)
+- `email`: EmailStr (válido)
 - `password`: min_length=6
 
 ### ReservationCreate
