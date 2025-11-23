@@ -530,11 +530,8 @@ const app = createApp({
             }
             
             try {
-                // Usar email directamente si contiene @, sino convertir RUT a email
-                const email = this.loginForm.rut.includes('@') ? this.loginForm.rut : `${this.loginForm.rut}@unab.cl`;
-                
-                // Login con el backend
-                await ApiService.login(email, this.loginForm.password);
+                // Login con el backend usando email
+                await ApiService.login(this.loginForm.rut, this.loginForm.password);
                 
                 // Obtener información del usuario
                 const userData = await ApiService.getCurrentUser();
@@ -543,7 +540,7 @@ const app = createApp({
                     email: userData.email,
                     nombre: userData.full_name?.split(' ')[0] || 'Usuario',
                     apellido: userData.full_name?.split(' ').slice(1).join(' ') || '',
-                    rut: this.loginForm.rut,
+                    rut: userData.rut || this.loginForm.rut,
                     isAdmin: userData.is_admin
                 };
                 
@@ -558,7 +555,7 @@ const app = createApp({
                 console.log('Login exitoso:', `${this.user.nombre} ${this.user.apellido}`);
             } catch (error) {
                 console.error('Error en login:', error);
-                alert('Credenciales incorrectas. Intenta con:\n\nAdmin: admin@unab.cl / admin123\nUsuario: usuario@unab.cl / usuario123');
+                alert('Credenciales incorrectas. Por favor verifica tu email y contraseña.');
             }
         },
         
@@ -578,6 +575,7 @@ const app = createApp({
             try {
                 // Registrar en el backend
                 await ApiService.register({
+                    rut: form.rut,
                     email: form.email,
                     password: form.password,
                     full_name: `${form.nombre} ${form.apellido}`
@@ -585,7 +583,7 @@ const app = createApp({
                 
                 alert('¡Registro exitoso! Ahora puedes iniciar sesión');
                 this.activeAuthTab = 'login';
-                this.loginForm.rut = form.email; // Pre-llenar el email en el login
+                this.loginForm.rut = form.rut; // Pre-llenar el RUT en el login
                 this.registerForm = {
                     nombre: '',
                     apellido: '',

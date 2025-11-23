@@ -1,20 +1,19 @@
-# Usar una imagen base de Node.js
-FROM node:18-alpine
+# Usar nginx para servir archivos estáticos
+FROM nginx:alpine
 
-# Establecer el directorio de trabajo
-WORKDIR /app
+# Copiar archivos estáticos al directorio de nginx
+COPY index.html /usr/share/nginx/html/
+COPY styles.css /usr/share/nginx/html/
+COPY vue-styles.css /usr/share/nginx/html/
+COPY app.js /usr/share/nginx/html/
+COPY *.json /usr/share/nginx/html/
+COPY src/ /usr/share/nginx/html/src/
 
-# Copiar el package.json y package-lock.json (si existe)
-COPY package*.json ./
+# Copiar configuración de nginx
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Instalar las dependencias
-RUN npm install
+# Exponer el puerto 80
+EXPOSE 80
 
-# Copiar todos los archivos del proyecto
-COPY . .
-
-# Exponer el puerto 8080
-EXPOSE 8080
-
-# Comando para ejecutar el servidor
-CMD ["npx", "http-server", "-p", "8080", "-c-1"]
+# Nginx se ejecuta automáticamente
+CMD ["nginx", "-g", "daemon off;"]

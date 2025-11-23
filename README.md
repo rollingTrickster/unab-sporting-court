@@ -1,53 +1,43 @@
-# Sistema de Reservas de Canchas Deportivas
+# 🏟️ Sistema de Reservas de Canchas Deportivas UNAB
 
-## Integrantes
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue)](https://www.docker.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115.0-green)](https://fastapi.tiangolo.com/)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3-brightgreen)](https://vuejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue)](https://www.postgresql.org/)
+
+## 👥 Integrantes
 - Andrés Calderón 
 - Joaquín Fuenzalida 
 - Bastián Kramarenko
 - Benjamín Vallejos
 
-## Descripción
-Este es un sistema completo de reservas de canchas deportivas con frontend en HTML/CSS/JavaScript vanilla y **backend profesional con FastAPI**. El sistema incluye autenticación JWT, encriptación de contraseñas con bcrypt, y documentación automática de la API.
+## 📋 Descripción
+Sistema completo de reservas de canchas deportivas con arquitectura moderna:
+- **Frontend**: Vue.js 3 con diseño responsive
+- **Backend**: FastAPI con autenticación JWT
+- **Base de Datos**: PostgreSQL 15
+- **Despliegue**: Docker & Docker Compose
 
-## 🚀 Inicio Rápido
+## 🚀 Instalación Rápida (Docker Hub)
 
-### Backend (FastAPI)
+### Un Solo Comando
+
+**Windows PowerShell:**
 ```powershell
-cd backend
-.\start.ps1
+mkdir unab-sporting-court; cd unab-sporting-court; Invoke-WebRequest -Uri "https://raw.githubusercontent.com/rollingTrickster/unab-sporting-court/CopiaConDockers/docker-compose.prod.yml" -OutFile "docker-compose.yml"; docker-compose up -d
 ```
 
-El servidor estará disponible en:
-- **API**: http://localhost:8000
-- **Swagger UI**: http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-
-### Frontend
-```powershell
-npm run dev
+**Linux/Mac:**
+```bash
+mkdir unab-sporting-court && cd unab-sporting-court && curl -o docker-compose.yml https://raw.githubusercontent.com/rollingTrickster/unab-sporting-court/CopiaConDockers/docker-compose.prod.yml && docker-compose up -d
 ```
 
-El frontend estará disponible en http://localhost:8080
-
-📖 **[Ver documentación completa del backend](backend/README.md)**
-
-## Despliegue con apache
-Para realizar el despliegue con apache utilizaremos XAMPP, donde luego de instalar este programa debe descargar el archivo comprimido de este Github, descomprimirlo y guardar esta carpeta, posterior a esto abriremos XAMPP donde en su interfaz principal presionaremos el boton de "Explorer" este abrira la ubicacion de los archivos para correr XAMPP, donde nos dirigiremos a la carpeta "htdocs", y copiaremos la carpeta descomprimida de los archivos de la aplicacion web, posterior a esto volveremos al XAMPP y en el apartado de Apache le daremos a "Start" y luego de esperar a que se inicie presionaremos el boton "Admin", este abrira en nuestro buscador la pagina principal de XAMPP. En esta pagina nos dirigiremos a la barra superior de nuestro buscador, editaremos el link y colocaremos "localhost/(nombre de la carpeta)" y le daremos a buscar. Luego de esto, nos deberia dirigir a nuestra pagina ya desplegada.
-
-## 🔐 Backend con FastAPI
-
-### Características del Backend
-- ✅ **FastAPI Framework**: API moderna y rápida
-- ✅ **Autenticación JWT**: Tokens seguros con expiración
-- ✅ **Encriptación bcrypt**: Contraseñas hasheadas de forma segura
-- ✅ **Documentación automática**: Swagger UI y ReDoc generados automáticamente
-- ✅ **Base de datos SQLAlchemy**: ORM potente con SQLite
-- ✅ **Sistema de roles**: Usuarios normales y administradores
-- ✅ **CORS configurado**: Integración con el frontend
-- ✅ **Validación Pydantic**: Validación automática de datos
+### Acceso
+- 🌐 **Aplicación**: http://localhost:8080
+- 🔌 **API**: http://localhost:8000
+- 📚 **Documentación**: http://localhost:8000/docs
 
 ### Credenciales de Prueba
-Después de ejecutar `init_db.py`:
 - **Admin**: `admin@unab.cl` / `admin123`
 - **Usuario**: `usuario@unab.cl` / `usuario123`
 

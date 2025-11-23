@@ -13,6 +13,8 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
+    # Nuevo campo RUT (identificador nacional). Se añadió como columna separada.
+    rut = Column(String, unique=True, index=True, nullable=True)
     hashed_password = Column(String, nullable=False)
     full_name = Column(String)
     is_active = Column(Boolean, default=True)
