@@ -92,6 +92,51 @@
         },
 
         /**
+         * Login con Firebase token (autenticación social)
+         * @param {string} firebaseToken - Token de Firebase
+         * @param {string} email - Email del usuario
+         * @returns {Promise<Object>} Token de acceso
+         */
+        async loginWithFirebase(firebaseToken, email) {
+            const response = await fetch(`${API_BASE_URL}${API_VERSION}/auth/firebase-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    firebase_token: firebaseToken,
+                    email: email 
+                })
+            });
+            const data = await handleResponse(response);
+            
+            // Guardar token en localStorage
+            if (data.access_token) {
+                localStorage.setItem('auth_token', data.access_token);
+            }
+            
+            return data;
+        },
+
+        /**
+         * Registrar usuario con Firebase (autenticación social)
+         * @param {Object} userData - Datos del usuario de Firebase
+         * @returns {Promise<Object>} Usuario creado
+         */
+        async registerWithFirebase(userData) {
+            const response = await fetch(`${API_BASE_URL}${API_VERSION}/auth/firebase-register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    uid: userData.uid,
+                    email: userData.email,
+                    full_name: userData.full_name,
+                    provider: userData.provider,
+                    photo_url: userData.photo_url
+                })
+            });
+            return handleResponse(response);
+        },
+
+        /**
          * Cerrar sesión
          */
         logout() {

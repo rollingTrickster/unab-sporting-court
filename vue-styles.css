@@ -318,6 +318,122 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    background: linear-gradient(135deg, var(--color-blue-50) 0%, var(--color-purple-50) 100%);
+    padding: 2rem 1rem;
+}
+
+/* Social Login Styles */
+.social-login-section {
+    margin-bottom: 1.5rem;
+}
+
+.social-login-header {
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.social-login-title {
+    font-size: var(--text-sm);
+    color: var(--muted-foreground);
+    font-weight: 500;
+}
+
+.social-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.btn-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: white;
+    color: var(--foreground);
+}
+
+.btn-social:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-social:active {
+    transform: translateY(0);
+}
+
+.btn-social .social-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.btn-google {
+    border-color: #4285f4;
+}
+
+.btn-google:hover {
+    background-color: #4285f4;
+    color: white;
+    border-color: #4285f4;
+}
+
+.btn-facebook {
+    border-color: #1877f2;
+}
+
+.btn-facebook:hover {
+    background-color: #1877f2;
+    color: white;
+    border-color: #1877f2;
+}
+
+.btn-github {
+    border-color: #333;
+}
+
+.btn-github:hover {
+    background-color: #333;
+    color: white;
+    border-color: #333;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+}
+
+.divider-text {
+    padding: 0 1rem;
+    color: var(--muted-foreground);
+    font-size: var(--text-sm);
+    background-color: white;
+}
+
+/* Auth Section */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: linear-gradient(135deg, var(--color-blue-50) 0%, var(--color-green-50) 100%);
     padding: 1rem;
 }

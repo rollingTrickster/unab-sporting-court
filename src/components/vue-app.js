@@ -541,7 +541,8 @@ const app = createApp({
                     nombre: userData.full_name?.split(' ')[0] || 'Usuario',
                     apellido: userData.full_name?.split(' ').slice(1).join(' ') || '',
                     rut: userData.rut || this.loginForm.rut,
-                    isAdmin: userData.is_admin
+                    isAdmin: userData.is_admin,
+                    authProvider: 'email'
                 };
                 
                 localStorage.setItem('currentUser', JSON.stringify(this.user));
@@ -556,6 +557,105 @@ const app = createApp({
             } catch (error) {
                 console.error('Error en login:', error);
                 alert('Credenciales incorrectas. Por favor verifica tu email y contraseña.');
+            }
+        },
+
+        // Firebase Social Login Methods
+        async loginWithGoogle() {
+            try {
+                console.log('🔐 Iniciando login con Google...');
+                const firebaseUser = await FirebaseService.loginWithGoogle();
+                await this.handleSocialLogin(firebaseUser);
+            } catch (error) {
+                console.error('Error en login con Google:', error);
+                alert(error.message || 'Error al iniciar sesión con Google');
+            }
+        },
+
+        async loginWithFacebook() {
+            try {
+                console.log('🔐 Iniciando login con Facebook...');
+                const firebaseUser = await FirebaseService.loginWithFacebook();
+                await this.handleSocialLogin(firebaseUser);
+            } catch (error) {
+                console.error('Error en login con Facebook:', error);
+                alert(error.message || 'Error al iniciar sesión con Facebook');
+            }
+        },
+
+        async loginWithGithub() {
+            try {
+                console.log('🔐 Iniciando login con GitHub...');
+                const firebaseUser = await FirebaseService.loginWithGithub();
+                await this.handleSocialLogin(firebaseUser);
+            } catch (error) {
+                console.error('Error en login con GitHub:', error);
+                alert(error.message || 'Error al iniciar sesión con GitHub');
+            }
+        },
+
+        async handleSocialLogin(firebaseUser) {
+            console.log('📥 Datos de Firebase recibidos:', firebaseUser);
+            
+            try {
+                // Extraer nombre y apellido del displayName
+                const nameParts = (firebaseUser.displayName || '').split(' ');
+                const nombre = nameParts[0] || 'Usuario';
+                const apellido = nameParts.slice(1).join(' ') || '';
+
+                // Intentar registrar/login en el backend con Firebase token
+                try {
+                    // Primero intentar login con Firebase token
+                    await ApiService.loginWithFirebase(firebaseUser.token, firebaseUser.email);
+                    console.log('✅ Usuario autenticado en backend con Firebase token');
+                } catch (backendError) {
+                    // Si falla, podría ser que el usuario no existe, intentar registrar
+                    console.log('ℹ️ Usuario no existe en backend, intentando registrar...');
+                    try {
+                        await ApiService.registerWithFirebase({
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            full_name: firebaseUser.displayName,
+                            provider: firebaseUser.provider,
+                            photo_url: firebaseUser.photoURL
+                        });
+                        console.log('✅ Usuario registrado en backend');
+                        
+                        // Intentar login nuevamente
+                        await ApiService.loginWithFirebase(firebaseUser.token, firebaseUser.email);
+                    } catch (registerError) {
+                        console.error('Error registrando usuario:', registerError);
+                        // Continuar con login solo de frontend si el backend falla
+                    }
+                }
+
+                // Configurar usuario en el frontend
+                this.user = {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    nombre: nombre,
+                    apellido: apellido,
+                    photoURL: firebaseUser.photoURL,
+                    authProvider: firebaseUser.provider,
+                    isAdmin: false,
+                    firebaseToken: firebaseUser.token
+                };
+
+                // Guardar en localStorage
+                localStorage.setItem('currentUser', JSON.stringify(this.user));
+                localStorage.setItem('firebase_token', firebaseUser.token);
+
+                // Cambiar a dashboard
+                this.currentView = 'dashboard';
+
+                // Cargar datos del usuario
+                await this.loadUserReservations();
+                await this.loadCourtsFromAPI();
+
+                console.log(`✅ Login con ${firebaseUser.provider} exitoso:`, this.user.email);
+            } catch (error) {
+                console.error('Error procesando login social:', error);
+                throw error;
             }
         },
         
@@ -600,12 +700,23 @@ const app = createApp({
         },
         
         logout() {
+            // Logout del backend
             ApiService.logout();
+            
+            // Logout de Firebase si está usando autenticación social
+            if (this.user?.authProvider !== 'email' && typeof FirebaseService !== 'undefined') {
+                FirebaseService.logout().catch(err => {
+                    console.error('Error en logout de Firebase:', err);
+                });
+            }
+            
+            // Limpiar estado
             this.user = null;
             this.currentView = 'auth';
             this.activeAuthTab = 'login';
             this.userReservations = [];
             localStorage.removeItem('currentUser');
+            localStorage.removeItem('firebase_token');
             this.resetSelection();
             console.log('Sesión cerrada');
         },
@@ -1328,12 +1439,61 @@ const app = createApp({
                 lucide.createIcons();
             });
         }
+
+        // Inicializar Firebase
+        if (typeof FirebaseService !== 'undefined') {
+            FirebaseService.init();
+            console.log('🔥 Firebase Service inicializado');
+
+            // Observar cambios en el estado de autenticación de Firebase
+            FirebaseService.onAuthStateChanged(async (firebaseUser) => {
+                if (firebaseUser && !this.user) {
+                    console.log('🔄 Estado de Firebase cambiado, usuario detectado:', firebaseUser.email);
+                    // Usuario autenticado en Firebase pero no en nuestra app
+                    // Esto puede suceder si se recarga la página
+                    try {
+                        const token = await firebaseUser.getIdToken();
+                        const userData = {
+                            uid: firebaseUser.uid,
+                            email: firebaseUser.email,
+                            displayName: firebaseUser.displayName,
+                            photoURL: firebaseUser.photoURL,
+                            provider: firebaseUser.providerData[0]?.providerId || 'unknown',
+                            token: token
+                        };
+                        // No llamar handleSocialLogin automáticamente para evitar loops
+                        // Solo restaurar desde localStorage si existe
+                    } catch (error) {
+                        console.error('Error obteniendo token de Firebase:', error);
+                    }
+                }
+            });
+        }
         
         // Verificar si hay sesión activa
         const savedUser = localStorage.getItem('currentUser');
-        if (savedUser && ApiService.isAuthenticated()) {
+        if (savedUser) {
             try {
                 this.user = JSON.parse(savedUser);
+                
+                // Verificar si es usuario de Firebase
+                if (this.user.authProvider !== 'email' && typeof FirebaseService !== 'undefined') {
+                    // Verificar que Firebase tenga usuario autenticado
+                    const firebaseUser = FirebaseService.getCurrentUser();
+                    if (!firebaseUser) {
+                        console.log('⚠️ Usuario de Firebase no encontrado, limpiando sesión');
+                        this.logout();
+                        return;
+                    }
+                }
+                
+                // Verificar autenticación con backend si usa email/password
+                if (this.user.authProvider === 'email' && !ApiService.isAuthenticated()) {
+                    console.log('⚠️ Token de backend expirado, limpiando sesión');
+                    this.logout();
+                    return;
+                }
+                
                 this.currentView = 'dashboard';
                 
                 // Cargar datos del usuario
@@ -1344,10 +1504,7 @@ const app = createApp({
             } catch (error) {
                 console.error('Error restaurando sesión:', error);
                 // Si hay error, limpiar sesión
-                ApiService.logout();
-                localStorage.removeItem('currentUser');
-                this.user = null;
-                this.currentView = 'auth';
+                this.logout();
             }
         } else {
             // No hay sesión, mostrar login
@@ -1361,7 +1518,8 @@ const app = createApp({
         this.fetchWeatherData();
         
         // Log initial state
-        console.log('App montada. Modo:', ApiService.isAuthenticated() ? 'Autenticado' : 'No autenticado');
+        const authMode = this.user?.authProvider || 'no autenticado';
+        console.log('App montada. Modo:', authMode);
     },
     
     watch: {
