@@ -387,16 +387,6 @@ body {
     border-color: #4285f4;
 }
 
-.btn-facebook {
-    border-color: #1877f2;
-}
-
-.btn-facebook:hover {
-    background-color: #1877f2;
-    color: white;
-    border-color: #1877f2;
-}
-
 .btn-github {
     border-color: #333;
 }

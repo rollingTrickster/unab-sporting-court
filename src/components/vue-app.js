@@ -572,17 +572,6 @@ const app = createApp({
             }
         },
 
-        async loginWithFacebook() {
-            try {
-                console.log('🔐 Iniciando login con Facebook...');
-                const firebaseUser = await FirebaseService.loginWithFacebook();
-                await this.handleSocialLogin(firebaseUser);
-            } catch (error) {
-                console.error('Error en login con Facebook:', error);
-                alert(error.message || 'Error al iniciar sesión con Facebook');
-            }
-        },
-
         async loginWithGithub() {
             try {
                 console.log('🔐 Iniciando login con GitHub...');
