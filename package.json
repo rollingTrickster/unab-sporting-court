@@ -10,10 +10,18 @@
     "dev:8081": "http-server . -p 8081 -c-1 -o",
     "dev:random": "http-server . -p 0 -c-1 -o"
   },
-  "keywords": ["vue", "reservas", "canchas", "deportes"],
+  "keywords": [
+    "vue",
+    "reservas",
+    "canchas",
+    "deportes"
+  ],
   "author": "Tu nombre",
   "license": "MIT",
   "devDependencies": {
     "http-server": "^14.1.1"
+  },
+  "dependencies": {
+    "firebase": "^12.6.0"
   }
 }
