@@ -5,7 +5,7 @@ Write-Host "🐳 Construyendo y subiendo imágenes a Docker Hub..." -ForegroundC
 Write-Host ""
 
 # Configuración
-$DOCKER_USERNAME = "doriajacke"
+$DOCKER_USERNAME = "jfuenzalida"
 $BACKEND_IMAGE = "$DOCKER_USERNAME/unab-sporting-backend"
 $FRONTEND_IMAGE = "$DOCKER_USERNAME/unab-sporting-frontend"
 $VERSION = "latest"

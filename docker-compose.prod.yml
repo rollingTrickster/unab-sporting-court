@@ -21,7 +21,7 @@ services:
 
   # Backend FastAPI (usando imagen de Docker Hub)
   backend:
-    image: doriajacke/unab-sporting-backend:latest
+    image: jfuenzalida/unab-sporting-backend:latest
     container_name: unab-sporting-backend
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-sporting_user}:${POSTGRES_PASSWORD:-sporting_password}@db:5432/${POSTGRES_DB:-sporting_court_db}
@@ -36,10 +36,19 @@ services:
         condition: service_healthy
     networks:
       - sporting-network
+    command: >
+      sh -c "
+        echo 'Esperando a que la base de datos esté lista...' &&
+        sleep 5 &&
+        echo 'Inicializando base de datos y datos...' &&
+        python init_db.py &&
+        echo 'Iniciando servidor FastAPI...' &&
+        uvicorn main:app --host 0.0.0.0 --port 8000
+      "
 
   # Frontend (usando imagen de Docker Hub)
   frontend:
-    image: doriajacke/unab-sporting-frontend:latest
+    image: jfuenzalida/unab-sporting-frontend:latest
     container_name: unab-sporting-frontend
     ports:
       - "8080:80"

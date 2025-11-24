@@ -530,11 +530,16 @@ const app = createApp({
             }
             
             try {
+                console.log('🔐 Intentando login con:', this.loginForm.rut);
+                
                 // Login con el backend usando email
-                await ApiService.login(this.loginForm.rut, this.loginForm.password);
+                const loginResult = await ApiService.login(this.loginForm.rut, this.loginForm.password);
+                console.log('✅ Login API exitoso, token recibido:', !!loginResult.access_token);
+                console.log('📦 Token guardado en localStorage:', !!localStorage.getItem('auth_token'));
                 
                 // Obtener información del usuario
                 const userData = await ApiService.getCurrentUser();
+                console.log('👤 Datos de usuario obtenidos:', userData.email);
                 
                 this.user = {
                     email: userData.email,
@@ -553,9 +558,10 @@ const app = createApp({
                 await this.loadUserReservations();
                 await this.loadCourtsFromAPI();
                 
-                console.log('Login exitoso:', `${this.user.nombre} ${this.user.apellido}`);
+                console.log('✅ Login exitoso completo:', `${this.user.nombre} ${this.user.apellido}`);
+                console.log('🔑 Verificación final - Token en storage:', !!localStorage.getItem('auth_token'));
             } catch (error) {
-                console.error('Error en login:', error);
+                console.error('❌ Error en login:', error);
                 alert('Credenciales incorrectas. Por favor verifica tu email y contraseña.');
             }
         },

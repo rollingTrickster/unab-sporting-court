@@ -2,7 +2,8 @@
     'use strict';
 
     // Configuración de la API
-    const API_BASE_URL = global.ENV?.API_BASE_URL || 'http://localhost:8000';
+    // Usar ruta relativa vacía para que Nginx haga el proxy a /api/v1
+    const API_BASE_URL = '';
     const API_VERSION = '/api/v1';
     
     // Helper para obtener el token JWT del localStorage
@@ -234,11 +235,22 @@
          * @returns {Promise<Object>} Reserva creada
          */
         async createReservation(reservationData) {
-            const response = await fetch(`${API_BASE_URL}${API_VERSION}/reservations`, {
+            const headers = getAuthHeaders();
+            const url = `${API_BASE_URL}${API_VERSION}/reservations`;
+            
+            console.log('🔍 DEBUG createReservation:');
+            console.log('  URL:', url);
+            console.log('  Headers:', headers);
+            console.log('  Data:', reservationData);
+            console.log('  Token present:', !!getAuthToken());
+            
+            const response = await fetch(url, {
                 method: 'POST',
-                headers: getAuthHeaders(),
+                headers: headers,
                 body: JSON.stringify(reservationData)
             });
+            
+            console.log('  Response status:', response.status);
             return handleResponse(response);
         },
 

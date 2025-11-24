@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Auth - UNAB Sporting Court</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        h2 { color: #666; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug - Sistema de Autenticación</h1>
+    
+    <div class="card">
+        <h2>📊 Estado del LocalStorage</h2>
+        <div id="localStorage-status"></div>
+    </div>
+
+    <div class="card">
+        <h2>🔑 Token JWT</h2>
+        <div id="token-status"></div>
+    </div>
+
+    <div class="card">
+        <h2>👤 Usuario Actual</h2>
+        <div id="user-status"></div>
+    </div>
+
+    <div class="card">
+        <h2>🧪 Pruebas de API</h2>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testGetUser()">Test Get User</button>
+        <button onclick="testCreateReservation()">Test Create Reservation</button>
+        <button onclick="clearStorage()">Limpiar Storage</button>
+        <div id="test-results" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function displayInfo() {
+            // LocalStorage
+            const token = localStorage.getItem('auth_token');
+            const user = localStorage.getItem('currentUser');
+            
+            document.getElementById('localStorage-status').innerHTML = `
+                <p><strong>auth_token:</strong> ${token ? '<span class="success">✓ Presente</span>' : '<span class="error">✗ No encontrado</span>'}</p>
+                <p><strong>currentUser:</strong> ${user ? '<span class="success">✓ Presente</span>' : '<span class="error">✗ No encontrado</span>'}</p>
+            `;
+
+            // Token
+            if (token) {
+                try {
+                    const parts = token.split('.');
+                    const payload = JSON.parse(atob(parts[1]));
+                    const exp = new Date(payload.exp * 1000);
+                    const now = new Date();
+                    const isExpired = exp < now;
+                    
+                    document.getElementById('token-status').innerHTML = `
+                        <pre>${token.substring(0, 50)}...</pre>
+                        <p><strong>Expira:</strong> ${exp.toLocaleString()}</p>
+                        <p><strong>Estado:</strong> ${isExpired ? '<span class="error">✗ Expirado</span>' : '<span class="success">✓ Válido</span>'}</p>
+                        <p><strong>Payload:</strong></p>
+                        <pre>${JSON.stringify(payload, null, 2)}</pre>
+                    `;
+                } catch (e) {
+                    document.getElementById('token-status').innerHTML = `<p class="error">Error al decodificar token: ${e.message}</p>`;
+                }
+            } else {
+                document.getElementById('token-status').innerHTML = `<p class="error">No hay token en localStorage</p>`;
+            }
+
+            // Usuario
+            if (user) {
+                try {
+                    const userData = JSON.parse(user);
+                    document.getElementById('user-status').innerHTML = `<pre>${JSON.stringify(userData, null, 2)}</pre>`;
+                } catch (e) {
+                    document.getElementById('user-status').innerHTML = `<p class="error">Error al parsear usuario: ${e.message}</p>`;
+                }
+            } else {
+                document.getElementById('user-status').innerHTML = `<p class="error">No hay usuario en localStorage</p>`;
+            }
+        }
+
+        async function testLogin() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<p class="info">Probando login...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/auth/login/json', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'usuario@unab.cl',
+                        password: 'usuario123'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    localStorage.setItem('auth_token', data.access_token);
+                    results.innerHTML = `<p class="success">✓ Login exitoso!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                    displayInfo();
+                } else {
+                    results.innerHTML = `<p class="error">✗ Error en login: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testGetUser() {
+            const results = document.getElementById('test-results');
+            const token = localStorage.getItem('auth_token');
+            
+            if (!token) {
+                results.innerHTML = '<p class="error">No hay token. Haz login primero.</p>';
+                return;
+            }
+            
+            results.innerHTML = '<p class="info">Obteniendo usuario...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/users/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    results.innerHTML = `<p class="success">✓ Usuario obtenido!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    results.innerHTML = `<p class="error">✗ Error: ${data.detail}</p>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        }
+
+        async function testCreateReservation() {
+            const results = document.getElementById('test-results');
+            const token = localStorage.getItem('auth_token');
+            
+            if (!token) {
+                results.innerHTML = '<p class="error">No hay token. Haz login primero.</p>';
+                return;
+            }
+            
+            results.innerHTML = '<p class="info">Creando reserva de prueba...</p>';
+            
+            try {
+                const response = await fetch('/api/v1/reservations', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        court_id: 1,
+                        date: '2025-11-28',
+                        time: '15:00',
+                        duration: 1,
+                        notes: 'Reserva de prueba desde debug'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    results.innerHTML = `<p class="success">✓ Reserva creada!</p><pre>${JSON.stringify(data, null, 2)}</pre>`;
+                } else {
+                    results.innerHTML = `<p class="error">✗ Error (${response.status}): ${JSON.stringify(data, null, 2)}</p>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<p class="error">✗ Error: ${error.message}</p>`;
+            }
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            document.getElementById('test-results').innerHTML = '<p class="success">✓ Storage limpiado</p>';
+            displayInfo();
+        }
+
+        // Actualizar info cada 2 segundos
+        displayInfo();
+        setInterval(displayInfo, 2000);
+    </script>
+</body>
+</html>
